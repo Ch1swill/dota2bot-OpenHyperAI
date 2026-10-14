@@ -1,10 +1,10 @@
-# Open Hyper AI (OHA) - Dota 2 Bot Scripts
+# Open Hyper AI Ch1 (OHA.Ch1) - Dota 2 Bot Scripts
 
 **The most feature-rich custom bot script for Dota 2.** Play against bots that actually fight, farm, push, and use items intelligently.
 
-> **To play:** Create a **Custom Lobby** and select **Local Host** as the server location. Bots should have names ending with **".OHA"** when installed correctly.
+> **To play:** Create a **Custom Lobby** and select **Local Host** as the server location. Bots should have names ending with **".OHA.Ch1"** when installed correctly.
 
-[Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3246316298) | [GitHub](https://github.com/forest0xia/dota2bot-OpenHyperAI) | [Feature Requests](https://github.com/forest0xia/dota2bot-OpenHyperAI/issues?q=is%3Aissue+is%3Aopen+%5BFeature+request%5D)
+[Upstream Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3246316298) | [GitHub](https://github.com/Ch1swill/dota2bot-OpenHyperAI) | [Feature Requests](https://github.com/Ch1swill/dota2bot-OpenHyperAI/issues?q=is%3Aissue+is%3Aopen+%5BFeature+request%5D)
 
 ![Screenshot](asset/images/steam-profile-screenshot.jpg)
 
