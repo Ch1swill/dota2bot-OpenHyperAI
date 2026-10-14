@@ -4,51 +4,56 @@ if bot == nil or bot:IsInvulnerable() or not bot:IsHero() or not string.find(bot
 local J = require( GetScriptDirectory()..'/FunLib/jmz_func' )
 
 local PING_RECENCY = 8        -- respond to pings within this many seconds
-local ASSEMBLE_DURATION = 5    -- stay in assemble mode for this long after ping
-local ASSEMBLE_DESIRE = 0.85   -- desire value when assembling
+local ANNOUNCE_COOLDOWN = 5
+local ASSEMBLE_DESIRE = BOT_MODE_DESIRE_ABSOLUTE
 local ARRIVE_RADIUS = 500      -- close enough to ping location
-local MAX_RESPOND_DIST = 3200  -- only respond if within this distance
 
 local assembleLoc = nil
-local assembleExpireTime = 0
+local lastPingTime = -math.huge
+
+local function UpdateAssembleOrder()
+	-- Read all allied humans: GetHumanPing() only returns the first human slot.
+	local latestPing = nil
+	for i = 1, #GetTeamPlayers(GetTeam()) do
+		local member = GetTeamMember(i)
+		if member ~= nil and not member:IsBot() then
+			local ping = member:GetMostRecentPing()
+			if ping ~= nil and ping.time ~= 0 and ping.location ~= nil then
+				local age = GameTime() - ping.time
+				if age >= 0 and age < PING_RECENCY
+				and (latestPing == nil or ping.time > latestPing.time) then
+					latestPing = ping
+				end
+			end
+		end
+	end
+
+	if latestPing ~= nil and latestPing.time > lastPingTime then
+		lastPingTime = latestPing.time
+		if latestPing.normal_ping then
+			assembleLoc = latestPing.location
+			if bot:IsAlive() and GetUnitToLocationDistance(bot, assembleLoc) > ARRIVE_RADIUS then
+				J.ModeAnnounce(bot, 'say_assemble', ANNOUNCE_COOLDOWN)
+			end
+		end
+	end
+end
 
 function GetDesire()
-	if not bot:IsAlive() then return BOT_MODE_DESIRE_NONE end
+	UpdateAssembleOrder()
+	if not bot:IsAlive() or assembleLoc == nil then return BOT_MODE_DESIRE_NONE end
 
-	-- Check for recent human normal pings (not danger pings)
-	local human, ping = J.GetHumanPing()
-	if human ~= nil and ping ~= nil
-	and ping.normal_ping
-	and ping.time ~= 0
-	and GameTime() - ping.time < PING_RECENCY
-	then
-		local dist = GetUnitToLocationDistance(bot, ping.location)
-		-- Only respond if we're not already very close and not too far away
-		if dist > ARRIVE_RADIUS and dist < MAX_RESPOND_DIST then
-			assembleLoc = ping.location
-			assembleExpireTime = GameTime() + ASSEMBLE_DURATION
-			J.ModeAnnounce(bot, 'say_assemble', ASSEMBLE_DURATION)
-			return ASSEMBLE_DESIRE
-		end
+	if GetUnitToLocationDistance(bot, assembleLoc) <= ARRIVE_RADIUS then
+		assembleLoc = nil
+		return BOT_MODE_DESIRE_NONE
 	end
 
-	-- Continue moving to assembly point if still active
-	if assembleLoc ~= nil and GameTime() < assembleExpireTime then
-		local dist = GetUnitToLocationDistance(bot, assembleLoc)
-		if dist <= ARRIVE_RADIUS then
-			assembleLoc = nil
-			return BOT_MODE_DESIRE_NONE
-		end
-		return ASSEMBLE_DESIRE
-	end
-
-	assembleLoc = nil
-	return BOT_MODE_DESIRE_NONE
+	-- A ground-ping order stays active across the map until arrival or a new ping.
+	return ASSEMBLE_DESIRE
 end
 
 function OnEnd()
-	assembleLoc = nil
-	assembleExpireTime = 0
+	-- Keep the destination when another mode temporarily interrupts the journey.
 end
 
 function Think()
