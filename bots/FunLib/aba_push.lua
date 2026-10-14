@@ -146,6 +146,7 @@ function ____exports.GetPushDesireHelper(bot, lane)
         bot:GetLocation(),
         1600
     )
+    local readyToPush = gameState.isLateGame and #alliesHere >= 3 and #alliesHere >= #enemiesHere and gameState.aliveAllyCount >= gameState.aliveEnemyCount
     local team = gameState.team
     local ourAncient = gameState.ourAncient
     local enemiesAtAncient = jmz.Utils.CountEnemyHeroesNear(
@@ -171,7 +172,7 @@ function ____exports.GetPushDesireHelper(bot, lane)
     if jmz.GetHP(bot) < 0.5 then
         nMaxDesire = math.min(nMaxDesire, 0.25)
     end
-    if gameState.aliveEnemyCount >= 5 and gameState.aliveAllyCount <= gameState.aliveEnemyCount then
+    if not readyToPush and gameState.aliveEnemyCount >= 5 and gameState.aliveAllyCount <= gameState.aliveEnemyCount then
         nMaxDesire = math.min(nMaxDesire, 0.41)
     end
     local closeEnemies = getCachedEnemiesNearLoc(
@@ -236,7 +237,7 @@ function ____exports.GetPushDesireHelper(bot, lane)
     local aAliveCoreCount = gameState.aliveAllyCoreCount
     local eAliveCoreCount = gameState.aliveEnemyCoreCount
     local hAncient = gameState.ourAncient
-    local nPushDesire = 0.5
+    local nPushDesire = readyToPush and 0.9 or 0.5
     local teamAncientLoc = hAncient:GetLocation()
     local nEffAlliesNearAncient = #jmz.GetAlliesNearLoc(teamAncientLoc, 4500) + #jmz.Utils.GetAllyIdsInTpToLocation(teamAncientLoc, 4500)
     local nEnemiesAroundAncient = jmz.GetEnemiesAroundLoc(teamAncientLoc, 4500)
@@ -566,7 +567,7 @@ locationStateCache = nil
 unitStateCache = nil
 local botStateCache = {}
 --- Update bot state cache if needed
-local function updateBotStateCache(bot, targetLoc)
+local function updateBotStateCache(bot)
     local now = DotaTime()
     local botId = bot:GetPlayerID()
     local cached = botStateCache[botId]
@@ -587,8 +588,7 @@ local function updateBotStateCache(bot, targetLoc)
         nearbyLaneCreeps = bot:GetNearbyLaneCreeps(1200, false),
         nearbyCreeps = bot:GetNearbyCreeps(1600, true),
         attackTarget = bot:GetAttackTarget(),
-        distanceToAncient = gameState.enemyAncient and GetUnitToUnitDistance(bot, gameState.enemyAncient) or math.huge,
-        distanceToTargetLoc = targetLoc and GetUnitToLocationDistance(bot, targetLoc) or 0
+        distanceToAncient = gameState.enemyAncient and GetUnitToUnitDistance(bot, gameState.enemyAncient) or math.huge
     }
     return botStateCache[botId]
 end
@@ -777,9 +777,7 @@ function ____exports.PushThink(bot, lane)
         end
     end
     local targetLoc = GetLaneFrontLocation(gameState.team, lane, fDeltaFromFront)
-    if not botState.distanceToTargetLoc or math.abs(botState.distanceToTargetLoc - GetUnitToLocationDistance(bot, targetLoc)) > 50 then
-        updateBotStateCache(bot, targetLoc)
-    end
+    local distanceToTargetLoc = GetUnitToLocationDistance(bot, targetLoc)
     if jmz.IsValidBuilding(nEnemyTowers[1]) and (nEnemyTowers[1]:GetAttackTarget() == bot or nEnemyTowers[1]:GetAttackTarget() ~= bot and bot:WasRecentlyDamagedByTower(#nAllyCreeps <= 2 and 4 or 2)) then
         local nDamage = nEnemyTowers[1]:GetAttackDamage() * nEnemyTowers[1]:GetAttackSpeed() * 5 - bot:GetHealthRegen() * 5
         if bot:GetActualIncomingDamage(nDamage, DamageType.Physical) / bot:GetHealth() > 0.15 or #nAllyCreeps > 2 then
@@ -814,24 +812,24 @@ function ____exports.PushThink(bot, lane)
     local towerDistanceToFountain = bTowerNearby and GetUnitToLocationDistance(nEnemyTowers[1], vTeamFountain) or 0
     for ____, creep in ipairs(nCreeps) do
         do
-            local __continue120
+            local __continue119
             repeat
                 if not jmz.IsValid(creep) or not jmz.CanBeAttacked(creep) then
-                    __continue120 = true
+                    __continue119 = true
                     break
                 end
                 if jmz.IsTormentor(creep) or jmz.IsRoshan(creep) then
-                    __continue120 = true
+                    __continue119 = true
                     break
                 end
                 if bTowerNearby and GetUnitToLocationDistance(creep, vTeamFountain) >= towerDistanceToFountain then
-                    __continue120 = true
+                    __continue119 = true
                     break
                 end
                 bot:Action_AttackUnit(creep, true)
                 return
             until true
-            if not __continue120 then
+            if not __continue119 then
                 break
             end
         end
@@ -845,7 +843,7 @@ function ____exports.PushThink(bot, lane)
         end
         return
     end
-    if botState.distanceToTargetLoc > 500 then
+    if distanceToTargetLoc > 500 then
         bot:Action_MoveToLocation(targetLoc)
         return
     else

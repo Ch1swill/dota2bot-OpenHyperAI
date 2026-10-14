@@ -16,19 +16,43 @@ local canDoTormentor = false
 if bot.tormentor_state == nil then bot.tormentor_state = false end
 if bot.tormentor_kill_time == nil then bot.tormentor_kill_time = 0 end
 
-local nCoreCountInLoc = 0
-local nSuppCountInLoc = 0
 local bHumanInTeam = false
+local tormentorWaitStart = nil
+local tormentorRetryTime = 0
 
 function GetDesire()
+	if DotaTime() < tormentorRetryTime then
+		bot.tormentor_state = false
+		bot.tormentor_team_healthy = false
+		return BOT_MODE_DESIRE_NONE
+	end
 	-- local cacheKey = 'GetSideShopDesire'..tostring(bot:GetPlayerID())
 	-- local cachedVar = J.Utils.GetCachedVars(cacheKey, 0.6 * (1 + Customize.ThinkLess))
 	-- if DotaTime() > 30 and cachedVar ~= nil then return cachedVar end
 	local res = GetDesireHelper()
+	-- A missing objective or an incomplete group must not hold the team forever.
+	if res > BOT_MODE_DESIRE_NONE then
+		if J.IsTormentor(J.GetProperTarget(bot)) and J.IsAttacking(bot) then
+			tormentorWaitStart = DotaTime()
+		elseif tormentorWaitStart == nil then
+			tormentorWaitStart = DotaTime()
+		elseif DotaTime() - tormentorWaitStart >= (J.IsModeTurbo() and 45 or 90) then
+			tormentorRetryTime = DotaTime() + 60
+			tormentorWaitStart = nil
+			bot.tormentor_state = false
+			bot.tormentor_team_healthy = false
+			canDoTormentor = false
+			return BOT_MODE_DESIRE_NONE
+		end
+	else
+		tormentorWaitStart = nil
+	end
 	-- J.Utils.SetCachedVars(cacheKey, res)
 	return res
 end
 function GetDesireHelper()
+	local nCoreCountInLoc = 0
+	local nSuppCountInLoc = 0
 	-- 如果在打高地 就别撤退去干别的
 	if J.Utils.IsTeamPushingSecondTierOrHighGround(bot) then
 		return BOT_MODE_DESIRE_NONE
@@ -195,10 +219,15 @@ function GetDesireHelper()
 
     local bGoodRightClickDamage = X.IsGoodRighClickDamage()
 
-    -- TODO: reduce wasting time waiting for someone as the location is very far now
     -- Someone go check Tormentor
     if DotaTime() >= nTormentorSpawnTime * 60 and (DotaTime() - bot.tormentor_kill_time) >= nTormentorSpawnInterval * 60 then
-        if not X.IsTormentorAlive() and bot.tormentor_state ~= true then
+        local isTormentorAlive = X.IsTormentorAlive()
+        -- A teammate with vision may have just confirmed that the pit is empty.
+        if DotaTime() - bot.tormentor_kill_time < nTormentorSpawnInterval * 60 then
+            canDoTormentor = false
+            return BOT_MODE_DESIRE_NONE
+        end
+        if not isTormentorAlive and bot.tormentor_state ~= true then
             if (nAveCoreLevel >= 13 and nAveSuppLevel >= 11)
             and GetUnitToUnitDistance(bot, hEnemyAncient) > 4000
             and bGoodRightClickDamage
@@ -287,7 +316,6 @@ end
 
 local fNextMovementTime = 0
 local fStillAlive = 0
-local bTormentorAlive = false
 function Think()
     if J.CanNotUseAction(bot) then return end
     if J.Utils.IsBotThinkingMeaningfulAction(bot, Customize.ThinkLess, "side_shop") then return end
@@ -309,6 +337,7 @@ function Think()
     if bot.tormentor_state == true and not X.IsEnoughAllies(vWaitingLocation, 1600) then
         if X.GetClosestBot() == bot and DotaTime() > fStillAlive + 15.0 then
             if GetUnitToLocationDistance(bot, TormentorLocation) <= 350 then
+                local bTormentorAlive = false
                 local nNeutralCreeps = bot:GetNearbyNeutralCreeps(900)
                 for i = #nNeutralCreeps, 1, -1 do
                     if J.IsValid(nNeutralCreeps[i]) and string.find(nNeutralCreeps[i]:GetUnitName(), 'miniboss') then
@@ -319,7 +348,6 @@ function Think()
                 if not bTormentorAlive then
                     bot.tormentor_kill_time = DotaTime()
                     bot.tormentor_state = false
-                    bTormentorAlive = false
                 end
             end
 
@@ -364,23 +392,37 @@ function Think()
 end
 
 function X.IsTormentorAlive()
+    local checkedPit = false
     if IsLocationVisible(TormentorLocation) then
         for i = 1, #GetTeamPlayers( GetTeam() ) do
             local member = GetTeamMember(i)
             if member ~= nil and member:IsAlive() then
-                if GetUnitToLocationDistance(member, TormentorLocation) <= 350 then
-                    local nNeutralCreeps = member:GetNearbyNeutralCreeps(900)
+                if GetUnitToLocationDistance(member, TormentorLocation) <= 900 then
+                    checkedPit = true
+                    local nNeutralCreeps = member:GetNearbyNeutralCreeps(1600)
                     for j = #nNeutralCreeps, 1, -1 do
                         if J.IsValid(nNeutralCreeps[j]) and string.find(nNeutralCreeps[j]:GetUnitName(), 'miniboss') then
                             return true
                         end
                     end
-
-                    member.tormentor_kill_time = DotaTime()
                 end
             end
         end
 	end
+
+    -- Share confirmed absence, rather than letting stale states recruit the team again.
+    if checkedPit then
+        Tormentor = nil
+        canDoTormentor = false
+        for i = 1, #GetTeamPlayers(GetTeam()) do
+            local member = GetTeamMember(i)
+            if member ~= nil then
+                member.tormentor_state = false
+                member.tormentor_team_healthy = false
+                member.tormentor_kill_time = DotaTime()
+            end
+        end
+    end
 
 	return false
 end
