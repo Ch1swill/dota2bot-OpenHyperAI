@@ -5,6 +5,7 @@ Run from the repository root with Lua 5.1 or newer:
 ```sh
 lua tests/turbo_push_regression.lua
 lua tests/assemble_ping_regression.lua
+lua tests/fretbots_autostart_regression.lua
 ```
 
 If Lua is unavailable, use the temporary Fengari runner:
@@ -12,6 +13,7 @@ If Lua is unavailable, use the temporary Fengari runner:
 ```sh
 npx --yes --package=fengari-node-cli@0.1.0 fengari tests/turbo_push_regression.lua
 npx --yes --package=fengari-node-cli@0.1.0 fengari tests/assemble_ping_regression.lua
+npx --yes --package=fengari-node-cli@0.1.0 fengari tests/fretbots_autostart_regression.lua
 ```
 
 The tests load the shipped Lua files with a simulated Dota bot API. They cover
@@ -35,12 +37,33 @@ locations and the current Roshan pit as additional anchors. When targets overlap
 ping as close to the intended target's center as possible. Target recognition
 accepts either reported ping flag; empty-ground collection requires a normal ping.
 
+The FretBots startup suite loads the actual `game/gameinit.lua` hook and loader
+with a simulated server API. It covers early startup, late player slots,
+per-match/reentrant dispatch, script reloads, manual startup, opt-out settings,
+client/bot/dedicated VMs, demo maps, human-only games, error handling, and cleanup.
+Its optional argument selects a different `game` directory, including the installed
+game scripts.
+
+Run the installer checks in PowerShell:
+
+```powershell
+.\tests\fretbots_install_regression.ps1
+```
+
+They create a fake Dota installation under `node_modules/.cache` and verify that
+initial installation, repeat installation, and replacement of an older hook
+preserve existing initialization code, backups, line endings, and customization.
+
 For TypeScript changes, compile and regenerate `bots/FunLib/aba_push.lua` before
 running the tests. The repository currently needs `npm ci --legacy-peer-deps`
 because its locked TSTL and TypeScript peer versions differ.
 
 These tests do not run the game engine. Verify in a Turbo local lobby that:
 
+- With the startup installer applied, start a new **Local Host** game with bots
+  and select **Local Dev Script** for both teams. FretBots starts once after hero
+  selection begins without a console command, and its difficulty/voting setup
+  appears as before. Repeat with a second new match to check startup again.
 - A healthy, formed group progresses along a lane after 18 minutes when its team
   is not outnumbered and its Ancient is safe.
 - Bots leave an empty Tormentor pit after observing that the objective is gone.
