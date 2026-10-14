@@ -340,6 +340,14 @@ Key files:
 - `FretBots/matchups_data.lua` -- Hero matchup database (14876 lines)
 - `FretBots/NeutralItems.lua` -- Item distribution with timing/difficulty scaling
 
+Local autostart runs in the **server VScript VM** via `game/gameinit.lua` and
+`game/ch1_fretbots_autostart.lua`. It waits for hero selection and bot player slots,
+then sends `sv_cheats 1; script_reload_code bots/fretbots` once per server VM.
+`Customize.Fretbots.Auto_Start` defaults to true, including when absent in older
+settings. The PowerShell installer in `tools/` backs up the installed Valve
+`gameinit.lua` and adds only the hook, preserving version-specific bindings.
+Bot scripts cannot start FretBots directly because their VM has no `GameRules`.
+
 ---
 
 ## 10. Customization System

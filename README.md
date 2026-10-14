@@ -30,7 +30,29 @@
 3. Select **Local Dev Script** for both Radiant and Dire bots. The upstream Workshop entry loads the upstream version.
 4. Start a new game - bots auto-pick and play.
 
-For **FretBots mode** (harder bots, neutral items, chatbot): [Manual installation guide](https://github.com/forest0xia/dota2bot-OpenHyperAI/discussions/68)
+### Automatic FretBots startup
+
+After copying the `bots` folder, run this installer once from the repository root
+in PowerShell, using your Dota 2 installation path:
+
+```powershell
+.\tools\install-fretbots-autostart.ps1 -DotaRoot 'D:\steam\steamapps\common\dota 2 beta'
+```
+
+It backs up the existing server initialization script, preserves its contents,
+and adds the Ch1 startup hook and loader. Each new **Local Host** bot game on the
+standard Dota map automatically runs `sv_cheats 1; script_reload_code bots/fretbots`
+once after hero selection begins and bot slots are available. No per-game console
+command is needed. Re-running the installer updates the hook without duplicating it.
+
+Set `Customize.Fretbots.Auto_Start = false` in your active `Customize/general.lua`
+to disable automatic startup. If the setting is absent in an existing customization,
+startup defaults to enabled. Dedicated servers, hero demo maps, and games without
+bots do not run the command. If a Dota update replaces `game/gameinit.lua`, run the
+installer again. FretBots difficulty and voting settings work as before.
+
+For more about **FretBots mode** (harder bots, neutral items, chatbot):
+[Upstream installation guide](https://github.com/forest0xia/dota2bot-OpenHyperAI/discussions/68)
 
 ---
 
