@@ -1545,6 +1545,8 @@ function J.IsGoingOnSomeone( bot )
 		or mode == BOT_MODE_GANK
 		or mode == BOT_MODE_ATTACK
 		or mode == BOT_MODE_DEFEND_ALLY
+		or (mode == BOT_MODE_ASSEMBLE and (bot.humanPingMode == 'attack' or bot.humanPingMode == 'defend')
+			and J.IsValidHero(J.GetProperTarget(bot)))
 
 end
 
@@ -1607,6 +1609,7 @@ function J.IsDefending( bot )
 	return mode == BOT_MODE_DEFEND_TOWER_TOP
 		or mode == BOT_MODE_DEFEND_TOWER_MID
 		or mode == BOT_MODE_DEFEND_TOWER_BOT
+		or (mode == BOT_MODE_ASSEMBLE and bot.humanPingMode == 'defend')
 
 end
 
@@ -1635,6 +1638,7 @@ function J.IsPushing( bot )
 	return mode == BOT_MODE_PUSH_TOWER_TOP
 		or mode == BOT_MODE_PUSH_TOWER_MID
 		or mode == BOT_MODE_PUSH_TOWER_BOT
+		or (mode == BOT_MODE_ASSEMBLE and bot.humanPingMode == 'push')
 
 end
 
@@ -1665,6 +1669,7 @@ function J.IsDoingRoshan( bot )
 	local mode = bot:GetActiveMode()
 
 	return mode == BOT_MODE_ROSHAN
+		or (mode == BOT_MODE_ASSEMBLE and bot.humanPingMode == 'roshan')
 
 end
 

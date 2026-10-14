@@ -2,7 +2,7 @@
 
 **The most feature-rich custom bot script for Dota 2.** Play against bots that actually fight, farm, push, and use items intelligently.
 
-> **To play:** Create a **Custom Lobby** and select **Local Host** as the server location. Bots should have names ending with **".OHA.Ch1"** when installed correctly.
+> **To play:** Install this fork's `bots` folder, create a **Custom Lobby**, select **Local Host**, and select **Local Dev Script** for both teams. Generated bot names end with **".OHA.Ch1"**. The local lobby menu entry remains **Local Dev Script**.
 
 [Upstream Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3246316298) | [GitHub](https://github.com/Ch1swill/dota2bot-OpenHyperAI) | [Feature Requests](https://github.com/Ch1swill/dota2bot-OpenHyperAI/issues?q=is%3Aissue+is%3Aopen+%5BFeature+request%5D)
 
@@ -25,9 +25,10 @@
 
 ## Quick Start
 
-1. Subscribe on [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3246316298)
-2. Create a **Custom Lobby** with **Local Host** server
-3. Start the game - bots auto-pick and play
+1. Copy this fork's `bots` folder into `<Dota 2>/game/dota/scripts/vscripts/bots`, backing up existing scripts first.
+2. Create a **Custom Lobby** with **Local Host** server.
+3. Select **Local Dev Script** for both Radiant and Dire bots. The upstream Workshop entry loads the upstream version.
+4. Start a new game - bots auto-pick and play.
 
 For **FretBots mode** (harder bots, neutral items, chatbot): [Manual installation guide](https://github.com/forest0xia/dota2bot-OpenHyperAI/discussions/68)
 
@@ -44,6 +45,25 @@ For **FretBots mode** (harder bots, neutral items, chatbot): [Manual installatio
 | `!sp XX` | Set bot language (`en`, `zh`, `ru`, `ja`) |
 
 Use [internal hero names](https://github.com/forest0xia/dota2bot-OpenHyperAI/discussions/71) if short names overlap (e.g., `!pick npc_dota_hero_keeper_of_the_light`). Batch commands work too: `!pick io; !ban sniper`.
+
+### Ping orders
+
+Ping directly on the target or its location. Allied bots prioritize the latest
+human teammate's order at any distance:
+
+| Ping location | Allied bot behavior |
+|---|---|
+| Empty ground, ordinary ping | Gather within 500 units |
+| Visible enemy hero | Focus the hero; follow while visible |
+| Roshan or the current Roshan pit | Travel to the pit and attack Roshan if present |
+| Enemy tower | Push that tower; clear nearby enemy lane creeps while protection blocks attacks |
+| Allied tower or allied hero | Approach and fight nearby enemy heroes and lane creeps |
+
+A new target or ordinary ground ping replaces the previous order. Heroes lost
+in fog are searched for briefly at their last seen position. Bots leave confirmed
+empty pits and release defense after 15 seconds without a nearby attackable
+threat. Temporarily blocked targets are approached, with a bounded wait if they
+remain unattackable. Empty-ground warning pings do not create orders.
 
 ---
 
