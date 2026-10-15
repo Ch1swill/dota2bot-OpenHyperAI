@@ -43,7 +43,9 @@ It backs up the existing server initialization script, preserves its contents,
 and adds the Ch1 startup hook and loader. Each new **Local Host** bot game on the
 standard Dota map automatically runs `sv_cheats 1; script_reload_code bots/fretbots`
 once after hero selection begins and bot slots are available. No per-game console
-command is needed. Re-running the installer updates the hook without duplicating it.
+command is needed. If bots join after the initial selection/spawn events, an
+independent server thinker checks every 0.5 seconds until startup is ready, then
+removes itself. Re-running the installer updates the hook without duplicating it.
 
 Set `Customize.Fretbots.Auto_Start = false` in your active `Customize/general.lua`
 to disable automatic startup. If the setting is absent in an existing customization,

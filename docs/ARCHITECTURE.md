@@ -343,6 +343,11 @@ Key files:
 Local autostart runs in the **server VScript VM** via `game/gameinit.lua` and
 `game/ch1_fretbots_autostart.lua`. It waits for hero selection and bot player slots,
 then sends `sv_cheats 1; script_reload_code bots/fretbots` once per server VM.
+Events are supplemented by a 0.5-second `info_target` thinker because bot slots
+can appear after selection/spawn notifications. Standard Dota maps return nil
+from `GameRules:GetGameModeEntity()`, so use an independent entity, as FretBots'
+own timer library does. The thinker removes itself when startup finishes or stops.
+Only explicit post-game/disconnect states end waiting; state IDs are not chronological.
 `Customize.Fretbots.Auto_Start` defaults to true, including when absent in older
 settings. The PowerShell installer in `tools/` backs up the installed Valve
 `gameinit.lua` and adds only the hook, preserving version-specific bindings.

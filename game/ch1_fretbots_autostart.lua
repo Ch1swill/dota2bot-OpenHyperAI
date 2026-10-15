@@ -44,13 +44,38 @@ local function IsEnabled()
 	return customize.Fretbots == nil or customize.Fretbots.Auto_Start ~= false
 end
 
-local function TryStart()
+local TryStart
+local function StartPolling()
+	if state.polling or type(SpawnEntityFromTableSynchronous) ~= 'function' then return end
+	-- Standard Dota games have no custom-game mode entity. Use the same independent
+	-- info_target thinker as FretBots/Timers.lua, after the map reaches hero selection.
+	local entity = SpawnEntityFromTableSynchronous('info_target', {targetname = 'ch1_fretbots_autostart_thinker'})
+	if entity == nil or type(entity.SetContextThink) ~= 'function' then return end
+	state.polling = true
+	entity:SetContextThink('Ch1FretBotsAutostart', function()
+		if not state.sent and not state.stopped then TryStart() end
+		if state.sent or state.stopped then
+			state.polling = false
+			if type(UTIL_Remove) == 'function' then UTIL_Remove(entity) end
+			return nil
+		end
+		return 0.5
+	end, 0.5)
+end
+
+TryStart = function()
 	if state.sent or state.stopped or GameRules == nil then return end
 	local gameState = GameRules:State_Get()
-	if gameState >= DOTA_GAMERULES_STATE_POST_GAME then Stop() return end
+	-- State IDs are not chronological: map loading and player draft use larger IDs.
+	if gameState == DOTA_GAMERULES_STATE_POST_GAME
+	or gameState == DOTA_GAMERULES_STATE_DISCONNECT then Stop() return end
+	-- Bot slots can be added after both hero selection and the first hero-spawn event.
+	-- Those inserts do not reliably produce another event; keep checking until ready.
 	if gameState < DOTA_GAMERULES_STATE_HERO_SELECTION then return end
+	if gameState == DOTA_GAMERULES_STATE_PLAYER_DRAFT then return end
 	if type(GetMapName) == 'function' and GetMapName() ~= 'dota' then Stop() return end
 	if Flags ~= nil and Flags.isFretBotsInitialized then state.sent = true Stop() return end
+	StartPolling()
 	if not HasBots() then return end
 	if not IsEnabled() then Stop() return end
 

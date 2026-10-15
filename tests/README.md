@@ -41,6 +41,10 @@ The FretBots startup suite loads the actual `game/gameinit.lua` hook and loader
 with a simulated server API. It covers early startup, late player slots,
 per-match/reentrant dispatch, script reloads, manual startup, opt-out settings,
 client/bot/dedicated VMs, demo maps, human-only games, error handling, and cleanup.
+It also models late bot insertion without further events, native thinker startup
+and removal, a nil custom-game mode entity on the standard map, and the higher
+numeric IDs of map-loading/player-draft states. These reproduce gaps in the
+original event-only startup logic.
 Its optional argument selects a different `game` directory, including the installed
 game scripts.
 
@@ -54,6 +58,14 @@ They create a fake Dota installation under `node_modules/.cache` and verify that
 initial installation, repeat installation, and replacement of an older hook
 preserve existing initialization code, backups, line endings, and customization.
 
+On 2026-10-15, the installed startup hook was also checked in the actual Dota 2
+engine over two consecutive local bot games in one client session (the second
+launched with `map dota gamemode 23`). The VConsole driver selected a hero and
+observed exactly one `Starting Fretbots mode` message and the welcome notification
+per game. It did not send `sv_cheats` or a FretBots reload command. The original
+late-insertion case failed before the fix; the startup suite now uses the native
+state constants and a nil game-mode entity to preserve that coverage.
+
 For TypeScript changes, compile and regenerate `bots/FunLib/aba_push.lua` before
 running the tests. The repository currently needs `npm ci --legacy-peer-deps`
 because its locked TSTL and TypeScript peer versions differ.
@@ -64,6 +76,8 @@ These tests do not run the game engine. Verify in a Turbo local lobby that:
   and select **Local Dev Script** for both teams. FretBots starts once after hero
   selection begins without a console command, and its difficulty/voting setup
   appears as before. Repeat with a second new match to check startup again.
+  In an offline bot game, select your hero so the engine creates the bot slots;
+  startup should follow without waiting for another state transition.
 - A healthy, formed group progresses along a lane after 18 minutes when its team
   is not outnumbered and its Ancient is safe.
 - Bots leave an empty Tormentor pit after observing that the objective is gone.
