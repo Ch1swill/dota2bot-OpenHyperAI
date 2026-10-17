@@ -1,10 +1,10 @@
-# Open Hyper AI (OHA) - Dota 2 Bot Scripts
+# Open Hyper AI Ch1 (OHA.Ch1) - Dota 2 Bot Scripts
 
 **The most feature-rich custom bot script for Dota 2.** Play against bots that actually fight, farm, push, and use items intelligently.
 
-> **To play:** Create a **Custom Lobby** and select **Local Host** as the server location. Bots should have names ending with **".OHA"** when installed correctly.
+> **To play:** Install this fork's `bots` folder, create a **Custom Lobby**, select **Local Host**, and select **Local Dev Script** for both teams. Generated bot names end with **".OHA.Ch1"**. The local lobby menu entry remains **Local Dev Script**.
 
-[Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3246316298) | [GitHub](https://github.com/forest0xia/dota2bot-OpenHyperAI) | [Feature Requests](https://github.com/forest0xia/dota2bot-OpenHyperAI/issues?q=is%3Aissue+is%3Aopen+%5BFeature+request%5D)
+[Upstream Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3246316298) | [GitHub](https://github.com/Ch1swill/dota2bot-OpenHyperAI) | [Feature Requests](https://github.com/Ch1swill/dota2bot-OpenHyperAI/issues?q=is%3Aissue+is%3Aopen+%5BFeature+request%5D)
 
 ![Screenshot](asset/images/steam-profile-screenshot.jpg)
 
@@ -25,11 +25,52 @@
 
 ## Quick Start
 
-1. Subscribe on [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3246316298)
-2. Create a **Custom Lobby** with **Local Host** server
-3. Start the game - bots auto-pick and play
+1. Copy this fork's `bots` folder into `<Dota 2>/game/dota/scripts/vscripts/bots`, backing up existing scripts first.
+2. Create a **Custom Lobby** with **Local Host** server.
+3. Select **Local Dev Script** for both Radiant and Dire bots. The upstream Workshop entry loads the upstream version.
+4. Start a new game - bots auto-pick and play.
 
-For **FretBots mode** (harder bots, neutral items, chatbot): [Manual installation guide](https://github.com/forest0xia/dota2bot-OpenHyperAI/discussions/68)
+### Waiting for backup
+
+Bots assess support at the intended fight before engaging a visible enemy group.
+Healthy allies already in range, close enough to advance together, or able to
+join within 1.25 seconds count as support. Distant, retreating, disabled and
+low-health allies do not. A lone bot waits outside the group or backs away from
+nearby enemies, then resumes once enough support arrives. Solo pickoffs against
+one visible enemy still work.
+
+Ping orders remain saved while waiting and resume when support catches up.
+Generic offensive blink and Magnus/Spirit Breaker initiation also check the
+destination. Both teams use the same safety rules. This uses visible information;
+it cannot predict a hidden enemy ambush. Existing spell queues are preserved.
+
+### Automatic FretBots startup
+
+After copying the `bots` folder, run this installer once from the repository root
+in PowerShell, using your Dota 2 installation path:
+
+```powershell
+.\tools\install-fretbots-autostart.ps1 -DotaRoot 'D:\steam\steamapps\common\dota 2 beta'
+```
+
+It backs up the existing server initialization script, preserves its contents,
+and adds the Ch1 startup hook and loader. Each new **Local Host** bot game on the
+standard Dota map automatically runs `sv_cheats 1; script_reload_code bots/fretbots`
+once after hero selection begins and bot slots are available. No per-game console
+command is needed. This covers Custom Lobby games hosted on the `start` map
+as well as offline games opened with `map dota`. If bots join after the initial
+selection/spawn events, an independent server thinker checks every 0.5 seconds
+until startup is ready, then removes itself. Re-running the installer updates the
+hook without duplicating it.
+
+Set `Customize.Fretbots.Auto_Start = false` in your active `Customize/general.lua`
+to disable automatic startup. If the setting is absent in an existing customization,
+startup defaults to enabled. Dedicated servers, hero demo maps, and games without
+bots do not run the command. If a Dota update replaces `game/gameinit.lua`, run the
+installer again. FretBots difficulty and voting settings work as before.
+
+For more about **FretBots mode** (harder bots, neutral items, chatbot):
+[Upstream installation guide](https://github.com/forest0xia/dota2bot-OpenHyperAI/discussions/68)
 
 ---
 
@@ -44,6 +85,31 @@ For **FretBots mode** (harder bots, neutral items, chatbot): [Manual installatio
 | `!sp XX` | Set bot language (`en`, `zh`, `ru`, `ja`) |
 
 Use [internal hero names](https://github.com/forest0xia/dota2bot-OpenHyperAI/discussions/71) if short names overlap (e.g., `!pick npc_dota_hero_keeper_of_the_light`). Batch commands work too: `!pick io; !ban sniper`.
+
+### Ping orders
+
+Ping directly on the target or its location. Allied bots prioritize the latest
+eligible human teammate's order:
+
+| Ping location | Allied bot behavior |
+|---|---|
+| Empty ground, ordinary ping | Gather within 500 units |
+| Visible enemy hero | Bots within 2500 units of the hero focus it; follow while visible |
+| Roshan or the current Roshan pit | Travel to the pit and attack Roshan if present |
+| Enemy tower | Push that tower; clear nearby enemy lane creeps while protection blocks attacks |
+| Allied tower or allied hero | Approach and fight nearby enemy heroes and lane creeps |
+
+Ground, tower, Roshan and defensive orders recruit bots from across the map.
+The hero-attack radius is checked only when receiving a new ping; accepted bots
+continue following a moving target beyond that radius. Distant bots ignore that
+hero ping and keep their current order, even if they later move into range.
+A fresh ping can recruit them once nearby.
+
+A new eligible target or ordinary ground ping replaces the previous order. Heroes lost
+in fog are searched for briefly at their last seen position. Bots leave confirmed
+empty pits and release defense after 15 seconds without a nearby attackable
+threat. Temporarily blocked targets are approached, with a bounded wait if they
+remain unattackable. Empty-ground warning pings do not create orders.
 
 ---
 

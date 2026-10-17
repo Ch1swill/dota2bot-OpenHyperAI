@@ -25,6 +25,7 @@ declare function IsInTeamFight(bot: Unit, radius: number): boolean;
 declare function IsRetreating(bot: Unit): boolean;
 
 declare function IsGoingOnSomeone(bot: Unit): boolean;
+declare function ShouldWaitForBackup(bot: Unit, location?: Vector): boolean;
 
 declare function CanNotUseAbility(bot: Unit): boolean;
 declare function CanNotUseAction(bot: Unit): boolean;

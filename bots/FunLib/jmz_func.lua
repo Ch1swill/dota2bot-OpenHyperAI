@@ -34,6 +34,7 @@ J.Skill = require( GetScriptDirectory()..'/FunLib/aba_skill' )
 J.Chat = require( GetScriptDirectory()..'/FunLib/aba_chat' )
 J.Utils = require( GetScriptDirectory()..'/FunLib/utils' )
 J.Customize = require(GetScriptDirectory()..'/FunLib/custom_loader')
+J.Engagement = require(GetScriptDirectory()..'/FunLib/aba_engagement')
 
 
 function J.SetUserHeroInit( nAbilityBuildList, nTalentBuildList, sBuyList, sSellList )
@@ -1497,7 +1498,7 @@ function J.IsRetreating( bot )
 	local bDamagedByAnyHero = bot:WasRecentlyDamagedByAnyHero( 2.0 )
 
 	return ( mode == BOT_MODE_RETREAT and modeDesire > BOT_MODE_DESIRE_MODERATE and bot:DistanceFromFountain() > 0 )
-		 or ( mode == BOT_MODE_EVASIVE_MANEUVERS and bDamagedByAnyHero )
+		 or ( mode == BOT_MODE_EVASIVE_MANEUVERS and (bDamagedByAnyHero or bot.ch1WaitingForBackup) )
 		 or ( bot:HasModifier( 'modifier_bloodseeker_rupture' ) and bDamagedByAnyHero )
 		 or ( mode == BOT_MODE_FARM and modeDesire > BOT_MODE_DESIRE_ABSOLUTE )
 		
@@ -1539,13 +1540,20 @@ end
 function J.IsGoingOnSomeone( bot )
 
 	local mode = bot:GetActiveMode()
+	if J.ShouldWaitForBackup(bot) then return false end
 
 	return mode == BOT_MODE_ROAM
 		or mode == BOT_MODE_TEAM_ROAM
 		or mode == BOT_MODE_GANK
 		or mode == BOT_MODE_ATTACK
 		or mode == BOT_MODE_DEFEND_ALLY
+		or (mode == BOT_MODE_ASSEMBLE and (bot.humanPingMode == 'attack' or bot.humanPingMode == 'defend')
+			and J.IsValidHero(J.GetProperTarget(bot)))
 
+end
+
+function J.ShouldWaitForBackup(bot, location)
+	return J.Engagement.Evaluate(bot, location).unsafe
 end
 
 local function IsEnemyTerrorbladeNear(unit, nRadius)
@@ -1607,6 +1615,7 @@ function J.IsDefending( bot )
 	return mode == BOT_MODE_DEFEND_TOWER_TOP
 		or mode == BOT_MODE_DEFEND_TOWER_MID
 		or mode == BOT_MODE_DEFEND_TOWER_BOT
+		or (mode == BOT_MODE_ASSEMBLE and bot.humanPingMode == 'defend')
 
 end
 
@@ -1635,6 +1644,7 @@ function J.IsPushing( bot )
 	return mode == BOT_MODE_PUSH_TOWER_TOP
 		or mode == BOT_MODE_PUSH_TOWER_MID
 		or mode == BOT_MODE_PUSH_TOWER_BOT
+		or (mode == BOT_MODE_ASSEMBLE and bot.humanPingMode == 'push')
 
 end
 
@@ -1665,6 +1675,7 @@ function J.IsDoingRoshan( bot )
 	local mode = bot:GetActiveMode()
 
 	return mode == BOT_MODE_ROSHAN
+		or (mode == BOT_MODE_ASSEMBLE and bot.humanPingMode == 'roshan')
 
 end
 

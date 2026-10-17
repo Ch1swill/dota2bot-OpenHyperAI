@@ -113,6 +113,7 @@ function X.SkillsComplement()
 
     ChargeOfDarknessDesire, ChargeOfDarknessTarget = X.ConsiderChargeOfDarkness()
     if ChargeOfDarknessDesire > 0
+        and not J.ShouldWaitForBackup(bot, ChargeOfDarknessTarget:GetLocation())
     then
         if ChargeOfDarkness:GetLevel() >= 3
         and Bulldoze:IsTrained()
@@ -141,6 +142,7 @@ function X.SkillsComplement()
 
     NetherStrikeDesire, NetherStrikeTarget = X.ConsiderNetherStrike()
     if NetherStrikeDesire > 0
+        and not J.ShouldWaitForBackup(bot, NetherStrikeTarget:GetLocation())
     then
         bot:Action_UseAbilityOnEntity(NetherStrike, NetherStrikeTarget)
         return

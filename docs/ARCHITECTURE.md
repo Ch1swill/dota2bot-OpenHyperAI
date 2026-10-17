@@ -294,6 +294,13 @@ end
    - **Ground-target AoE** (Pipe, Shiva's): check enemy count in range
    - **Urn-like** (heal or damage): check charges, target ally for heal / enemy for damage
 
+Item dispatch checks an equipped BKB before ordinary items, retaining cooldown,
+backpack-swap, invisibility, disable, casting/channeling and queued-combo guards.
+Its incoming-spell defense is independent of the active behavior mode; reflection
+and spell-shield buffs do not suppress it. Proactive protection requires two
+nearby real enemies and a close hero engagement or recent hero damage. This
+protects an existing engagement; it does not authorize initiating one.
+
 ### Helper Functions Used
 
 - `J.GetNearbyHeroes(bot, range, isEnemy, mode)` -- Get heroes in range
@@ -328,6 +335,31 @@ Located in `mode_*_generic.lua` files:
 
 These files generally don't need updating for item/ability patches, only for game mechanic changes (e.g., timing changes, map changes).
 
+`FunLib/aba_engagement.lua` assesses visible enemy groups within 900 of a proposed
+fight. Support is measured at that location, not in a 1600–2200 circle around the
+bot. Real, healthy, available allies count if already in attack range, arriving
+within 1.25 seconds, or gathered within 600 of the initiator with a similar arrival
+time. This last case avoids a deadlock where every teammate waits outside the
+fight for the others to advance first. Evaluations are cached for 0.2 seconds.
+
+`mode_evasive_maneuvers_generic.lua` takes priority over normal engagements when
+at least two visible enemy players outnumber ready allies. It cancels the old
+attack/move order, holds outside 1100 of the nearest enemy, or moves 450 away from
+a closer threat. It yields when support arrives or enemies leave. Low-health
+retreat, casting/channeling, existing queues, Rupture and forced combat retain
+their existing handling. An impassable escape point cancels the old order.
+
+`J.IsGoingOnSomeone` rejects unsupported engagements so hero spells do not start
+new offensive combos. Team roam yields as well, including its 1.5-desire last-hit
+path. Ping orders pause near an unsafe destination while retaining their target.
+Enemy-hero Ping orders recruit only bots within 2500 units of the resolved hero
+at receipt. The timestamp is consumed even when out of range, without replacing
+an existing order. Accepted pursuits are not leashed to that recruitment radius.
+Ground gathering, tower pushes, Roshan and defensive Pings remain global.
+Generic offensive blink and the Magnus/Spirit Breaker cast entry points validate
+the actual destination before issuing an action or building a queue. The safety
+check uses no hidden enemy information and applies symmetrically to both teams.
+
 ---
 
 ## 9. FretBots (Enhanced Difficulty)
@@ -339,6 +371,22 @@ Key files:
 - `FretBots/HeroNames.lua` -- Hero name localizations for chat
 - `FretBots/matchups_data.lua` -- Hero matchup database (14876 lines)
 - `FretBots/NeutralItems.lua` -- Item distribution with timing/difficulty scaling
+
+Local autostart runs in the **server VScript VM** via `game/gameinit.lua` and
+`game/ch1_fretbots_autostart.lua`. It waits for hero selection and bot player slots,
+then sends `sv_cheats 1; script_reload_code bots/fretbots` once per server VM.
+The map guard accepts both `dota` (direct console games) and `start` (GC-created
+local lobbies, which stream Dota into that host map). Checking only for `dota`
+silently prevents startup through the Custom Lobby UI.
+Events are supplemented by a 0.5-second `info_target` thinker because bot slots
+can appear after selection/spawn notifications. Standard Dota maps return nil
+from `GameRules:GetGameModeEntity()`, so use an independent entity, as FretBots'
+own timer library does. The thinker removes itself when startup finishes or stops.
+Only explicit post-game/disconnect states end waiting; state IDs are not chronological.
+`Customize.Fretbots.Auto_Start` defaults to true, including when absent in older
+settings. The PowerShell installer in `tools/` backs up the installed Valve
+`gameinit.lua` and adds only the hook, preserving version-specific bindings.
+Bot scripts cannot start FretBots directly because their VM has no `GameRules`.
 
 ---
 

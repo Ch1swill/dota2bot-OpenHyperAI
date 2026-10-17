@@ -104,6 +104,8 @@ Customize.Force_Group_Push_Level = 1
 -- For more about Fretbots mode: https://github.com/forest0xia/dota2bot-OpenHyperAI/discussions/68
 -- Note: these settings below will override the pre-defind settings in Fretbots folder.
 Customize.Fretbots = {
+    -- Automatically start FretBots in local bot games when the server hook is installed.
+    Auto_Start = true,
     -- Default difficulty, a number between: [0, 10]
     Default_Difficulty = 2,
 

@@ -72,7 +72,6 @@ type CachedBotState = {
     nearbyCreeps: Unit[];
     attackTarget: Unit | null;
     distanceToAncient: number;
-    distanceToTargetLoc: number;
 };
 
 const PUSH_CACHE_TTL = 0.5; // 500ms cache TTL - increased for better performance
@@ -168,7 +167,7 @@ function updateUnitStateCache(): CachedUnitState {
 }
 
 /** Update bot state cache if needed */
-function updateBotStateCache(bot: Unit, targetLoc?: Vector): CachedBotState {
+function updateBotStateCache(bot: Unit): CachedBotState {
     const now = DotaTime();
     const botId = bot.GetPlayerID();
     const cached = botStateCache[botId];
@@ -193,7 +192,6 @@ function updateBotStateCache(bot: Unit, targetLoc?: Vector): CachedBotState {
         nearbyCreeps: bot.GetNearbyCreeps(1600, true),
         attackTarget: bot.GetAttackTarget(),
         distanceToAncient: gameState.enemyAncient ? GetUnitToUnitDistance(bot, gameState.enemyAncient) : Number.POSITIVE_INFINITY,
-        distanceToTargetLoc: targetLoc ? GetUnitToLocationDistance(bot, targetLoc) : 0,
     };
 
     return botStateCache[botId];
@@ -277,6 +275,8 @@ export function GetPushDesireHelper(bot: Unit, lane: Lane): BotModeDesire {
     // Current, LOCAL threat picture around the bot (not reused across Think)
     const alliesHere = getCachedAlliesNearLoc(bot.GetLocation(), 1600);
     const enemiesHere = getCachedEnemiesNearLoc(bot.GetLocation(), 1600);
+    const readyToPush =
+        gameState.isLateGame && alliesHere.length >= 3 && alliesHere.length >= enemiesHere.length && gameState.aliveAllyCount >= gameState.aliveEnemyCount;
 
     // --- Strong base-defense gate for push ---
     const team = gameState.team;
@@ -307,7 +307,7 @@ export function GetPushDesireHelper(bot: Unit, lane: Lane): BotModeDesire {
         nMaxDesire = math.min(nMaxDesire, 0.25);
     }
     // Caution when all enemies alive and no advantage
-    if (gameState.aliveEnemyCount >= 5 && gameState.aliveAllyCount <= gameState.aliveEnemyCount) {
+    if (!readyToPush && gameState.aliveEnemyCount >= 5 && gameState.aliveAllyCount <= gameState.aliveEnemyCount) {
         nMaxDesire = math.min(nMaxDesire, 0.41);
     }
     // Cap push desire when enemy heroes are very close — bot should fight, not push
@@ -388,7 +388,8 @@ export function GetPushDesireHelper(bot: Unit, lane: Lane): BotModeDesire {
 
     const hAncient = gameState.ourAncient;
     // Base push desire calculation - missing function implementation
-    let nPushDesire = 0.5; // Default base desire
+    // A formed late-game group needs enough desire to leave passive farming/holding.
+    let nPushDesire = readyToPush ? 0.9 : 0.5;
     //   const allyKills = jmz.GetNumOfTeamTotalKills(false) + 1;
     //   const enemyKills = jmz.GetNumOfTeamTotalKills(true) + 1;
     //   const teamKillsRatio = allyKills / enemyKills; // (not used later but retained)
@@ -793,10 +794,9 @@ export function PushThink(bot: Unit, lane: Lane): void {
     // 5) Compute our approach waypoint for this lane
     const targetLoc = GetLaneFrontLocation(gameState.team, lane, fDeltaFromFront);
 
-    // Update bot cache with target location for distance calculations (only if needed)
-    if (!botState.distanceToTargetLoc || Math.abs(botState.distanceToTargetLoc - GetUnitToLocationDistance(bot, targetLoc)) > 50) {
-        updateBotStateCache(bot, targetLoc);
-    }
+    // The cached snapshot was collected before this waypoint was known. Its TTL can
+    // reject a second update, so use the current waypoint distance for movement.
+    const distanceToTargetLoc = GetUnitToLocationDistance(bot, targetLoc);
 
     // 6) If the nearest enemy tower is shooting (or just shot) us → kite back
     if (
@@ -868,7 +868,7 @@ export function PushThink(bot: Unit, lane: Lane): void {
     }
 
     // 10) Movement fallback: path to approach point, then do small attack-move jitter to hold space
-    if (botState.distanceToTargetLoc > 500) {
+    if (distanceToTargetLoc > 500) {
         bot.Action_MoveToLocation(targetLoc);
         return;
     } else {
