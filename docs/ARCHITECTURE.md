@@ -335,6 +335,27 @@ Located in `mode_*_generic.lua` files:
 
 These files generally don't need updating for item/ability patches, only for game mechanic changes (e.g., timing changes, map changes).
 
+`FunLib/aba_engagement.lua` assesses visible enemy groups within 900 of a proposed
+fight. Support is measured at that location, not in a 1600–2200 circle around the
+bot. Real, healthy, available allies count if already in attack range, arriving
+within 1.25 seconds, or gathered within 600 of the initiator with a similar arrival
+time. This last case avoids a deadlock where every teammate waits outside the
+fight for the others to advance first. Evaluations are cached for 0.2 seconds.
+
+`mode_evasive_maneuvers_generic.lua` takes priority over normal engagements when
+at least two visible enemy players outnumber ready allies. It cancels the old
+attack/move order, holds outside 1100 of the nearest enemy, or moves 450 away from
+a closer threat. It yields when support arrives or enemies leave. Low-health
+retreat, casting/channeling, existing queues, Rupture and forced combat retain
+their existing handling. An impassable escape point cancels the old order.
+
+`J.IsGoingOnSomeone` rejects unsupported engagements so hero spells do not start
+new offensive combos. Team roam yields as well, including its 1.5-desire last-hit
+path. Ping orders pause near an unsafe destination while retaining their target.
+Generic offensive blink and the Magnus/Spirit Breaker cast entry points validate
+the actual destination before issuing an action or building a queue. The safety
+check uses no hidden enemy information and applies symmetrically to both teams.
+
 ---
 
 ## 9. FretBots (Enhanced Difficulty)

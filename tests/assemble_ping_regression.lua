@@ -30,10 +30,12 @@ local function world()
     function bot:IsBot() return true end
     function bot:IsAlive() return self.alive end
     function bot:IsNull() return false end
+    function bot:HasModifier() return false end
     function bot:CanBeSeen() return true end
     function bot:GetLocation() return self.location end
     function bot:GetTeam() return 2 end
     function bot:GetActiveMode() return self.mode end
+    function bot:GetPlayerID() return 2 end
     function bot:GetTarget() return self.target end
     function bot:GetAttackTarget() return self.attackTarget end
     function bot:SetTarget(target) self.target = target end
@@ -65,6 +67,7 @@ local function world()
     local members = {w.human, w.otherHuman, bot}
     local jmz = {
         CanNotUseAction = function() return w.blocked or not bot.alive end,
+        ShouldWaitForBackup = function() return w.waitingForBackup or false end,
         GetHumanPing = function() return w.human, w.human.ping end,
         ModeAnnounce = function() w.announcements = w.announcements + 1 end,
         GetDistance = distance,
@@ -95,6 +98,7 @@ local function world()
         TOWER_BASE_1 = 9, TOWER_BASE_2 = 10,
         GetBot = function() return bot end,
         GameTime = function() return w.now end,
+        DotaTime = function() return w.now end,
         GetScriptDirectory = function() return 'bots' end,
         GetTeam = function() return 2 end,
         GetOpposingTeam = function() return 3 end,
@@ -102,6 +106,7 @@ local function world()
         GetTeamPlayers = function() return {0, 1, 2} end,
         GetTeamMember = function(i) return members[i] end,
         GetUnitToLocationDistance = function(u, loc) return distance(u.location, loc) end,
+        GetUnitToUnitDistance = function(a, b) return distance(a.location, b.location) end,
         GetUnitList = function(kind) return w.units[kind] or {} end,
         IsLocationVisible = function() return w.visible end,
         IsPlayerBot = function(id) return id == 2 end,
@@ -130,6 +135,8 @@ local function world()
         function u:GetLocation() return self.location end
         function u:GetTeam() return (kind == 2 or kind == 10) and 2 or 3 end
         function u:IsHero() return self.hero end
+        function u:IsIllusion() return self.illusion or false end
+        function u:GetPlayerID() return kind * 10 + #w.units[kind] end
         function u:IsBuilding() return self.building end
         function u:GetUnitName() return self.roshan and 'npc_dota_roshan' or 'test_unit' end
         function u:HasModifier(modifier) return self.modifiers[modifier] or false end
@@ -140,6 +147,14 @@ local function world()
     function w:loadRealJmz()
         local previousRequire = env.require
         env.require = function(name)
+            if name:find('/aba_engagement', 1, true) then
+                if setfenv then
+                    local chunk = assert(loadfile(sourceRoot .. '/FunLib/aba_engagement.lua'))
+                    setfenv(chunk, env)
+                    return chunk()
+                end
+                return assert(loadfile(sourceRoot .. '/FunLib/aba_engagement.lua', 't', env))()
+            end
             if name:find('/utils', 1, true) then
                 return {IsValidHero = jmz.IsValidHero, IsValidUnit = jmz.IsValidHero}
             end
@@ -536,6 +551,22 @@ test('new ground command clears the previous focused combat target', function()
     w.env.GetDesire()
     w.env.Think()
     assert(w.bot.target == nil and w.bot.humanPingMode == 'gather' and w.bot.destination == target)
+end)
+
+test('unsafe target ping waits without forgetting the order and resumes with backup', function()
+    local w = world() local enemy = w:unit(5, vector(1000)) w:ping(enemy.location)
+    w.waitingForBackup = true
+    assert(w.env.GetDesire() == 0) w.env.Think()
+    assert(w.bot.attackTarget == nil and w.bot.humanPingMode == 'attack')
+    w.waitingForBackup = false
+    assert(w.env.GetDesire() == 1) w.env.Think()
+    assert(w.bot.attackTarget == enemy)
+end)
+
+test('distant ping still recruits bots before the local safety check applies', function()
+    local w = world() w:ping(vector(12000)) w.waitingForBackup = true
+    assert(w.env.GetDesire() == 1) w.env.Think()
+    assert(w.bot.destination.x == 12000)
 end)
 
 test('hero ability context recognizes commanded attacks, defense, push and Roshan', function()

@@ -1590,7 +1590,7 @@ X.ConsiderItemDesire["item_blink"] = function( hItem )
 			if (#nInRangeAlly >= nNearbyEnemyHeroCount and bWeAreStronger) then
 				local nDistance = Min(nCastRange, GetUnitToUnitDistance(bot, botTarget))
 				local vLocation = J.GetUnitTowardDistanceLocation(bot, botTarget, nDistance) + RandomVector(150)
-				if IsLocationPassable(vLocation) then
+				if IsLocationPassable(vLocation) and not J.ShouldWaitForBackup(bot, vLocation) then
 					return BOT_ACTION_DESIRE_HIGH, vLocation, 'ground', nil
 				end
 			end

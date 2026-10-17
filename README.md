@@ -30,6 +30,20 @@
 3. Select **Local Dev Script** for both Radiant and Dire bots. The upstream Workshop entry loads the upstream version.
 4. Start a new game - bots auto-pick and play.
 
+### Waiting for backup
+
+Bots assess support at the intended fight before engaging a visible enemy group.
+Healthy allies already in range, close enough to advance together, or able to
+join within 1.25 seconds count as support. Distant, retreating, disabled and
+low-health allies do not. A lone bot waits outside the group or backs away from
+nearby enemies, then resumes once enough support arrives. Solo pickoffs against
+one visible enemy still work.
+
+Ping orders remain saved while waiting and resume when support catches up.
+Generic offensive blink and Magnus/Spirit Breaker initiation also check the
+destination. Both teams use the same safety rules. This uses visible information;
+it cannot predict a hidden enemy ambush. Existing spell queues are preserved.
+
 ### Automatic FretBots startup
 
 After copying the `bots` folder, run this installer once from the repository root

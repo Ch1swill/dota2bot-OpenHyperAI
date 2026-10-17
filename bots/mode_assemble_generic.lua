@@ -175,6 +175,8 @@ function GetDesire()
 	if not bot:IsAlive() then return BOT_MODE_DESIRE_NONE end
 	UpdateOrderState()
 	if order == nil then return BOT_MODE_DESIRE_NONE end
+	if GetUnitToLocationDistance(bot, order.location) <= 1800
+		and J.ShouldWaitForBackup(bot, order.location) then return BOT_MODE_DESIRE_NONE end
 
 	-- Human orders stay active across the map, including when their ping expires.
 	return ASSEMBLE_DESIRE
@@ -188,6 +190,8 @@ function Think()
 	if J.CanNotUseAction(bot) then return end
 	UpdateOrderState()
 	if order == nil then return end
+	if GetUnitToLocationDistance(bot, order.location) <= 1800
+		and J.ShouldWaitForBackup(bot, order.location) then return end
 
 	local target = order.target
 	if order.kind == 'defend' then target = order.defenseTarget end

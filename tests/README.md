@@ -7,6 +7,7 @@ lua tests/turbo_push_regression.lua
 lua tests/assemble_ping_regression.lua
 lua tests/fretbots_autostart_regression.lua
 lua tests/bkb_usage_regression.lua
+lua tests/engagement_safety_regression.lua
 ```
 
 If Lua is unavailable, use the temporary Fengari runner:
@@ -16,6 +17,7 @@ npx --yes --package=fengari-node-cli@0.1.0 fengari tests/turbo_push_regression.l
 npx --yes --package=fengari-node-cli@0.1.0 fengari tests/assemble_ping_regression.lua
 npx --yes --package=fengari-node-cli@0.1.0 fengari tests/fretbots_autostart_regression.lua
 npx --yes --package=fengari-node-cli@0.1.0 fengari tests/bkb_usage_regression.lua
+npx --yes --package=fengari-node-cli@0.1.0 fengari tests/engagement_safety_regression.lua
 ```
 
 The tests load the shipped Lua files with a simulated Dota bot API. They cover
@@ -61,6 +63,23 @@ existing immunity, disables and spell queues. No other item is suppressed when
 BKB is unavailable or has no reason to activate. These are decision/dispatch
 checks, not an in-engine reproduction of a particular hero diving into a team.
 The optional argument selects a different `bots` directory for baseline checks.
+
+The engagement suite loads the real safety module, `jmz_func`, waiting mode and
+hero cast dispatchers. It covers a healthy solo dive, distant/unavailable backup,
+arrival timing, gathered-team release, illusions/fog/clones, backing away, blocked
+terrain, and guards for health, channels, queues, Rupture and forced combat.
+All four Magnus blink combos and both Spirit Breaker initiation spells are
+checked before queueing, with supported casts still allowed. Team roam's early
+yield and Ping pause/resume are covered too. These are API simulations.
+
+On 2026-10-17 an agent-owned offline game also loaded the actual waiting mode.
+Temporary instrumentation observed one bot with one ready ally (itself) versus
+two visible enemies in mode 19, then two ready allies versus two enemies in mode
+1. This confirms native selection and release, rather than just calling Lua
+GetDesire directly. A controlled server fixture did not complete; the engine
+evidence came from the ordinary offline game. Temporary instrumentation and
+fixtures were removed afterward. Specific hero combat in a Custom Lobby remains
+an in-game validation item.
 
 Run the installer checks in PowerShell:
 
@@ -124,4 +143,9 @@ These tests do not run the game engine. Verify in a Turbo local lobby that:
   defending or following a ground ping, including under Lotus reflection or a
   spell shield. In close combat against two visible heroes it takes priority
   over ordinary items. Check hero-specific initiation queues separately: this
-  change preserves those queues and does not change engagement/retreat decisions.
+  BKB change preserves those queues; engagement checks apply before initiation.
+- A healthy bot approaching multiple visible enemies waits for actual support.
+  Teammates gathering nearby or arriving at the fight release the wait; teammates
+  who are far away, retreating or disabled do not. A single enemy remains eligible
+  for a solo pickoff. Ping orders resume after waiting, and Magnus/Spirit Breaker
+  do not initiate into an unsupported group.

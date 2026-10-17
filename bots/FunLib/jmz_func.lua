@@ -34,6 +34,7 @@ J.Skill = require( GetScriptDirectory()..'/FunLib/aba_skill' )
 J.Chat = require( GetScriptDirectory()..'/FunLib/aba_chat' )
 J.Utils = require( GetScriptDirectory()..'/FunLib/utils' )
 J.Customize = require(GetScriptDirectory()..'/FunLib/custom_loader')
+J.Engagement = require(GetScriptDirectory()..'/FunLib/aba_engagement')
 
 
 function J.SetUserHeroInit( nAbilityBuildList, nTalentBuildList, sBuyList, sSellList )
@@ -1497,7 +1498,7 @@ function J.IsRetreating( bot )
 	local bDamagedByAnyHero = bot:WasRecentlyDamagedByAnyHero( 2.0 )
 
 	return ( mode == BOT_MODE_RETREAT and modeDesire > BOT_MODE_DESIRE_MODERATE and bot:DistanceFromFountain() > 0 )
-		 or ( mode == BOT_MODE_EVASIVE_MANEUVERS and bDamagedByAnyHero )
+		 or ( mode == BOT_MODE_EVASIVE_MANEUVERS and (bDamagedByAnyHero or bot.ch1WaitingForBackup) )
 		 or ( bot:HasModifier( 'modifier_bloodseeker_rupture' ) and bDamagedByAnyHero )
 		 or ( mode == BOT_MODE_FARM and modeDesire > BOT_MODE_DESIRE_ABSOLUTE )
 		
@@ -1539,6 +1540,7 @@ end
 function J.IsGoingOnSomeone( bot )
 
 	local mode = bot:GetActiveMode()
+	if J.ShouldWaitForBackup(bot) then return false end
 
 	return mode == BOT_MODE_ROAM
 		or mode == BOT_MODE_TEAM_ROAM
@@ -1548,6 +1550,10 @@ function J.IsGoingOnSomeone( bot )
 		or (mode == BOT_MODE_ASSEMBLE and (bot.humanPingMode == 'attack' or bot.humanPingMode == 'defend')
 			and J.IsValidHero(J.GetProperTarget(bot)))
 
+end
+
+function J.ShouldWaitForBackup(bot, location)
+	return J.Engagement.Evaluate(bot, location).unsafe
 end
 
 local function IsEnemyTerrorbladeNear(unit, nRadius)
