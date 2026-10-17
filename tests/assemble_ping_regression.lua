@@ -299,7 +299,7 @@ end)
 
 test('enemy hero ping attacks and follows the visible target', function()
     local w = world()
-    local enemy = w:unit(5, vector(6000))
+    local enemy = w:unit(5, vector(2000))
     w:ping(enemy.location)
     assert(w.env.GetDesire() == 1)
     w.env.Think()
@@ -311,18 +311,105 @@ test('enemy hero ping attacks and follows the visible target', function()
     assert(w.bot.attackTarget == enemy, 'moving target was replaced by the original ground point')
 end)
 
-test('lost hero vision searches the last seen point and releases the order', function()
+test('enemy hero ping includes bots exactly 2500 units away', function()
+    local w = world()
+    local enemy = w:unit(5, vector(1500, 2000))
+    w:ping(enemy.location)
+    assert(w.env.GetDesire() == 1, 'bot on the response boundary is excluded')
+    w.env.Think()
+    assert(w.bot.attackTarget == enemy and w.bot.humanPingMode == 'attack')
+end)
+
+test('enemy hero ping excludes distant bots for either ping flag', function()
+    for _, normal in ipairs({true, false}) do
+        local w = world()
+        local enemy = w:unit(5, vector(2501))
+        w:ping(enemy.location, nil, normal)
+        assert(w.env.GetDesire() == 0, 'distant hero ping recruits the bot')
+        w.env.Think()
+        assert(w.bot.action == nil and w.bot.humanPingMode == nil, 'rejected order issues an action')
+        assert(w.announcements == 0, 'distant bot announces acceptance')
+    end
+end)
+
+test('the same enemy ping recruits nearby bots and leaves distant bots alone', function()
+    for _, position in ipairs({8500, 6500}) do
+        local w = world()
+        w.bot.location = vector(position)
+        local enemy = w:unit(5, vector(10000))
+        w:ping(enemy.location)
+        local nearby = position == 8500
+        assert(w.env.GetDesire() == (nearby and 1 or 0), 'response ignores individual bot distance')
+        w.env.Think()
+        assert((w.bot.attackTarget == enemy) == nearby, 'incorrect bot joins the attack')
+    end
+end)
+
+test('a rejected hero ping is consumed and a fresh nearby ping is accepted', function()
     local w = world()
     local enemy = w:unit(5, vector(6000))
+    w:ping(enemy.location)
+    assert(w.env.GetDesire() == 0)
+    w.now, w.bot.location = w.now + 1, vector(5000)
+    assert(w.env.GetDesire() == 0, 'moving into range replays an ignored command')
+    w:ping(enemy.location)
+    assert(w.env.GetDesire() == 1, 'fresh nearby command is ignored')
+    w.env.Think()
+    assert(w.bot.attackTarget == enemy and w.announcements == 1)
+end)
+
+test('a distant hero ping preserves existing global orders', function()
+    for _, kind in ipairs({'gather', 'push', 'roshan', 'defend'}) do
+        local w = world()
+        local destination = vector(12000)
+        local objective
+        if kind == 'push' then objective = w:unit(11, destination) end
+        if kind == 'roshan' then objective = w:unit(13, destination) end
+        if kind == 'defend' then objective = w:unit(10, destination) end
+        w:ping(destination)
+        assert(w.env.GetDesire() == 1, 'global ' .. kind .. ' order is restricted by distance')
+        w.env.Think()
+        w.now = w.now + 1
+        local enemy = w:unit(5, vector(6000))
+        w:ping(enemy.location)
+        assert(w.env.GetDesire() == 1, 'rejected command cancels ' .. kind)
+        w.env.Think()
+        assert(w.bot.humanPingMode == kind and w.announcements == 1, 'rejected command replaces ' .. kind)
+        if kind == 'push' or kind == 'roshan' then
+            assert(w.bot.target == objective and w.bot.attackTarget == objective, 'objective target was lost')
+        else
+            assert(w.bot.destination == destination, 'global destination was lost')
+        end
+    end
+end)
+
+test('a distant hero ping preserves an already accepted attack', function()
+    local w = world()
+    local first = w:unit(5, vector(2000))
+    w:ping(first.location)
+    w.env.GetDesire()
+    w.env.Think()
+    w.now = w.now + 1
+    local distant = w:unit(5, vector(6000))
+    w:ping(distant.location)
+    assert(w.env.GetDesire() == 1)
+    w.env.Think()
+    assert(w.bot.target == first and w.bot.attackTarget == first, 'distant ping clears the active focus')
+    assert(w.announcements == 1, 'rejected retask is announced')
+end)
+
+test('lost hero vision searches the last seen point and releases the order', function()
+    local w = world()
+    local enemy = w:unit(5, vector(2000))
     w:ping(enemy.location)
     w.env.GetDesire()
     w.env.Think()
     assert(w.bot.action == 'attack' and w.bot.target == enemy, 'focus command never started')
     enemy.seen, enemy.location = false, vector(10000)
-    w.bot.location = vector(6000)
+    w.bot.location = vector(2000)
     w.env.GetDesire()
     w.env.Think()
-    assert(w.bot.action == 'move' and w.bot.destination.x == 6000, 'hidden live coordinates were followed')
+    assert(w.bot.action == 'move' and w.bot.destination.x == 2000, 'hidden live coordinates were followed')
     assert(w.bot.target == nil, 'hidden combat target survives')
     w.now = w.now + 9
     assert(w.env.GetDesire() == 0 and w.bot.humanPingMode == nil, 'fog search holds the team forever')
@@ -330,7 +417,7 @@ end)
 
 test('a killed hero completes the attack order', function()
     local w = world()
-    local enemy = w:unit(5, vector(6000))
+    local enemy = w:unit(5, vector(2000))
     w:ping(enemy.location)
     w.env.GetDesire()
     w.env.Think()
@@ -350,7 +437,7 @@ end)
 
 test('a target ping is recognized with either reported ping flag', function()
     local w = world()
-    local enemy = w:unit(5, vector(6000))
+    local enemy = w:unit(5, vector(2000))
     w:ping(enemy.location, nil, false)
     assert(w.env.GetDesire() == 1)
     w.env.Think()
@@ -416,7 +503,7 @@ end)
 
 test('temporary hero invulnerability does not discard a target ping', function()
     local w = world()
-    local enemy = w:unit(5, vector(6000))
+    local enemy = w:unit(5, vector(2000))
     enemy.attackable = false
     w:ping(enemy.location)
     w.env.GetDesire()
@@ -541,7 +628,7 @@ end)
 
 test('new ground command clears the previous focused combat target', function()
     local w = world()
-    local enemy = w:unit(5, vector(6000))
+    local enemy = w:unit(5, vector(2000))
     w:ping(enemy.location)
     w.env.GetDesire()
     w.env.Think()

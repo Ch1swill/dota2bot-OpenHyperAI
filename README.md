@@ -89,17 +89,23 @@ Use [internal hero names](https://github.com/forest0xia/dota2bot-OpenHyperAI/dis
 ### Ping orders
 
 Ping directly on the target or its location. Allied bots prioritize the latest
-human teammate's order at any distance:
+eligible human teammate's order:
 
 | Ping location | Allied bot behavior |
 |---|---|
 | Empty ground, ordinary ping | Gather within 500 units |
-| Visible enemy hero | Focus the hero; follow while visible |
+| Visible enemy hero | Bots within 2500 units of the hero focus it; follow while visible |
 | Roshan or the current Roshan pit | Travel to the pit and attack Roshan if present |
 | Enemy tower | Push that tower; clear nearby enemy lane creeps while protection blocks attacks |
 | Allied tower or allied hero | Approach and fight nearby enemy heroes and lane creeps |
 
-A new target or ordinary ground ping replaces the previous order. Heroes lost
+Ground, tower, Roshan and defensive orders recruit bots from across the map.
+The hero-attack radius is checked only when receiving a new ping; accepted bots
+continue following a moving target beyond that radius. Distant bots ignore that
+hero ping and keep their current order, even if they later move into range.
+A fresh ping can recruit them once nearby.
+
+A new eligible target or ordinary ground ping replaces the previous order. Heroes lost
 in fog are searched for briefly at their last seen position. Bots leave confirmed
 empty pits and release defense after 15 seconds without a nearby attackable
 threat. Temporarily blocked targets are approached, with a bounded wait if they

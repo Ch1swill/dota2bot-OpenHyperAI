@@ -8,6 +8,7 @@ local ANNOUNCE_COOLDOWN = 5
 local ASSEMBLE_DESIRE = BOT_MODE_DESIRE_ABSOLUTE
 local ARRIVE_RADIUS = 500      -- close enough to ping location
 local TARGET_RADIUS = 250
+local HERO_PING_RECRUIT_RADIUS = 2500
 local ROSHAN_PIT_RADIUS = 600
 local DEFEND_RADIUS = 1600
 local DEFEND_QUIET_TIME = 15
@@ -97,6 +98,10 @@ local function UpdateAssembleOrder()
 		lastPingTime = latestPing.time
 		local newOrder = ResolvePing(latestPing)
 		if newOrder ~= nil then
+			-- Only recruit nearby bots for hero attacks; ignored pings preserve the current order.
+			-- Check once on receipt so an accepted pursuit can continue beyond this radius.
+			if newOrder.kind == 'attack'
+				and GetUnitToLocationDistance(bot, newOrder.location) > HERO_PING_RECRUIT_RADIUS then return end
 			ClearOrder()
 			order = newOrder
 			bot.humanPingMode = order.kind

@@ -29,7 +29,11 @@ numbers and base-defense safety gates. An optional argument selects a different
 
 The assembly suite covers ground pings across the map, journeys beyond the ping
 recency window, redirection, arrival, mode interruptions, multiple human slots,
-respawning and action pauses. It also covers hero focus and loss of vision,
+respawning and action pauses. Hero attacks recruit within 2500 units of the
+target at receipt; boundary checks, per-bot distance, consumption of rejected
+pings, fresh re-pings and preservation of prior orders are covered. Accepted
+pursuits continue beyond that radius; objective/gather/defense orders stay global.
+It also covers hero focus and loss of vision,
 illusion filtering, protected and hidden towers, moving allied heroes, defense
 leashes and completion, visible/unseen/absent Roshan, retasking, and the actual
 hero ability-context helpers. Ground and target orders receive absolute mode
@@ -131,9 +135,11 @@ These tests do not run the game engine. Verify in a Turbo local lobby that:
 - An allied human's ordinary ground ping brings bots from across the map, even
   when the journey takes more than a few seconds. A newer ground ping changes
   their destination, and they return to other activities within 500 units of it.
-- A visible enemy hero ping makes bots attack the hero, including ability use;
-  loss of vision sends them only to the last seen location and ends the search
-  after eight seconds there.
+- A visible enemy hero ping recruits bots within 2500 units of the hero, including
+  ability use. Distant bots keep their current orders; entering range afterward
+  does not replay that ping, but a fresh nearby ping recruits them. Accepted bots
+  keep following beyond 2500. Loss of vision sends them only to the last seen
+  location and ends the search after eight seconds there.
 - An enemy tower ping initiates a push, including when the tower is initially
   hidden/protected; an allied tower or hero ping sends defensive support. Defense
   ends after 15 quiet seconds and does not chase attackers beyond the anchor area.

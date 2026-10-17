@@ -352,6 +352,10 @@ their existing handling. An impassable escape point cancels the old order.
 `J.IsGoingOnSomeone` rejects unsupported engagements so hero spells do not start
 new offensive combos. Team roam yields as well, including its 1.5-desire last-hit
 path. Ping orders pause near an unsafe destination while retaining their target.
+Enemy-hero Ping orders recruit only bots within 2500 units of the resolved hero
+at receipt. The timestamp is consumed even when out of range, without replacing
+an existing order. Accepted pursuits are not leashed to that recruitment radius.
+Ground gathering, tower pushes, Roshan and defensive Pings remain global.
 Generic offensive blink and the Magnus/Spirit Breaker cast entry points validate
 the actual destination before issuing an action or building a queue. The safety
 check uses no hidden enemy information and applies symmetrically to both teams.
