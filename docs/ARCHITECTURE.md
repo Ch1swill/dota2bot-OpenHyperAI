@@ -294,6 +294,13 @@ end
    - **Ground-target AoE** (Pipe, Shiva's): check enemy count in range
    - **Urn-like** (heal or damage): check charges, target ally for heal / enemy for damage
 
+Item dispatch checks an equipped BKB before ordinary items, retaining cooldown,
+backpack-swap, invisibility, disable, casting/channeling and queued-combo guards.
+Its incoming-spell defense is independent of the active behavior mode; reflection
+and spell-shield buffs do not suppress it. Proactive protection requires two
+nearby real enemies and a close hero engagement or recent hero damage. This
+protects an existing engagement; it does not authorize initiating one.
+
 ### Helper Functions Used
 
 - `J.GetNearbyHeroes(bot, range, isEnemy, mode)` -- Get heroes in range

@@ -6,6 +6,7 @@ Run from the repository root with Lua 5.1 or newer:
 lua tests/turbo_push_regression.lua
 lua tests/assemble_ping_regression.lua
 lua tests/fretbots_autostart_regression.lua
+lua tests/bkb_usage_regression.lua
 ```
 
 If Lua is unavailable, use the temporary Fengari runner:
@@ -14,6 +15,7 @@ If Lua is unavailable, use the temporary Fengari runner:
 npx --yes --package=fengari-node-cli@0.1.0 fengari tests/turbo_push_regression.lua
 npx --yes --package=fengari-node-cli@0.1.0 fengari tests/assemble_ping_regression.lua
 npx --yes --package=fengari-node-cli@0.1.0 fengari tests/fretbots_autostart_regression.lua
+npx --yes --package=fengari-node-cli@0.1.0 fengari tests/bkb_usage_regression.lua
 ```
 
 The tests load the shipped Lua files with a simulated Dota bot API. They cover
@@ -49,6 +51,16 @@ numeric IDs of map-loading/player-draft states. These reproduce gaps in the
 original event-only startup logic.
 Its optional argument selects a different `game` directory, including the installed
 game scripts.
+
+The BKB suite loads the full shipped `ability_item_usage_generic.lua` module and
+calls its real `ItemUsageThink` entry point with a simulated bot API. It covers
+spell/projectile defense outside attack/retreat modes, reflection/shield buffs,
+close combat against two heroes, and deterministic BKB priority in all six
+inventory positions. It also checks cooldowns, backpack/swap delays, invisibility,
+existing immunity, disables and spell queues. No other item is suppressed when
+BKB is unavailable or has no reason to activate. These are decision/dispatch
+checks, not an in-engine reproduction of a particular hero diving into a team.
+The optional argument selects a different `bots` directory for baseline checks.
 
 Run the installer checks in PowerShell:
 
@@ -108,3 +120,8 @@ These tests do not run the game engine. Verify in a Turbo local lobby that:
   ends after 15 quiet seconds and does not chase attackers beyond the anchor area.
 - A Roshan/pit ping makes bots approach and attack the present Roshan, and a
   confirmed empty pit or dead objective releases the order.
+- A ready BKB in an active slot responds to an incoming spell while pushing,
+  defending or following a ground ping, including under Lotus reflection or a
+  spell shield. In close combat against two visible heroes it takes priority
+  over ordinary items. Check hero-specific initiation queues separately: this
+  change preserves those queues and does not change engagement/retreat decisions.

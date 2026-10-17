@@ -993,8 +993,17 @@ local function ItemUsageComplement()
 	if aether ~= nil then aetherRange = 250 else aetherRange = 0 end
 
 	local nItemSlot = { 5, 4, 3, 2, 1, 0, 15, 16 }
+	-- Defensive BKB must not wait behind boots, farming items or an offensive blink.
+	for index, nSlot in ipairs(nItemSlot) do
+		local item = bot:GetItemInSlot(nSlot)
+		if nSlot <= 5 and item ~= nil and item:GetName() == 'item_black_king_bar' then
+			table.remove(nItemSlot, index)
+			table.insert(nItemSlot, 1, nSlot)
+			break
+		end
+	end
 
-	for _, nSlot in pairs( nItemSlot )
+	for _, nSlot in ipairs( nItemSlot )
 	do
 		local hItem = bot:GetItemInSlot( nSlot )
 		if J.CanCastAbility(hItem)
@@ -1339,67 +1348,47 @@ end
 
 --BKB
 X.ConsiderItemDesire["item_black_king_bar"] = function( hItem )
-	if bot:HasModifier('modifier_dazzle_nothl_projection_soul_debuff') then
+	if bot:HasModifier('modifier_dazzle_nothl_projection_soul_debuff')
+		or bot:IsMagicImmune()
+		or bot:IsInvulnerable()
+	then
 		return BOT_ACTION_DESIRE_NONE
 	end
 
 	local nCastRange = 1300
 	local sCastType = 'none'
-	local hEffectTarget = nil
-	local sCastMotive = nil
-	local nInRangeEnmyList = J.GetNearbyHeroes(bot, nCastRange, true, BOT_MODE_NONE )
+	-- Incoming spells matter while defending, pushing and following a ground ping too.
+	-- Reflection / spell shields do not protect against every spell in a fight.
+	if J.IsNotAttackProjectileIncoming(bot, 350) then
+		return BOT_ACTION_DESIRE_HIGH, bot, sCastType, '防御弹道'
+	end
+	if J.IsWillBeCastUnitTargetSpell(bot, nCastRange) then
+		return BOT_ACTION_DESIRE_HIGH, bot, sCastType, '防御指向技能'
+	end
+	if J.IsWillBeCastPointSpell(bot, nCastRange) then
+		return BOT_ACTION_DESIRE_HIGH, bot, sCastType, '防御地点技能'
+	end
 
-
-	if #nInRangeEnmyList > 0
-		and not bot:IsMagicImmune()
-		and not bot:IsInvulnerable()
-		and not bot:HasModifier( 'modifier_item_lotus_orb_active' )
-		and not bot:HasModifier( 'modifier_antimage_spell_shield' )
-		and ( J.IsGoingOnSomeone( bot ) or J.IsRetreating( bot ) )
-	then
-		local nearEnemyCount = J.GetEnemyCount( bot, 600 )
-		if bot:IsRooted()
-		then
-			sCastMotive = '解缠绕'
-			return BOT_ACTION_DESIRE_HIGH, bot, sCastType, sCastMotive
+	local nearEnemyCount = J.GetEnemyCount(bot, 800)
+	if nearEnemyCount > 0 then
+		if bot:IsRooted() then
+			return BOT_ACTION_DESIRE_HIGH, bot, sCastType, '解缠绕'
 		end
-
-		if bot:IsSilenced()
-			and bot:GetMana() > 100
-			and not bot:HasModifier( "modifier_item_mask_of_madness_berserk" )
+		if bot:IsSilenced() and bot:GetMana() > 100
+			and not bot:HasModifier('modifier_item_mask_of_madness_berserk')
 			and nearEnemyCount >= 2
 		then
-			sCastMotive = '解沉默'
-			return BOT_ACTION_DESIRE_HIGH, bot, sCastType, sCastMotive
+			return BOT_ACTION_DESIRE_HIGH, bot, sCastType, '解沉默'
 		end
+	end
 
-		if J.IsNotAttackProjectileIncoming( bot, 350 )
-		and nearEnemyCount >= 1
-		then
-			sCastMotive = '防御弹道'
-			return BOT_ACTION_DESIRE_HIGH, bot, sCastType, sCastMotive
-		end
-
-		if J.IsWillBeCastUnitTargetSpell( bot, nCastRange )
-		and nearEnemyCount >= 1
-		then
-			sCastMotive = '防御指向技能'
-			return BOT_ACTION_DESIRE_HIGH, bot, sCastType, sCastMotive
-		end
-
-		if J.IsWillBeCastPointSpell( bot, nCastRange )
-		and nearEnemyCount >= 1
-		then
-			sCastMotive = '防御地点技能'
-			return BOT_ACTION_DESIRE_HIGH, bot, sCastType, sCastMotive
-		end
-
-		if J.GetEnemyCount( bot, 800 ) >= 3
-		then
-			sCastMotive = '先开BKB切入'
-			return BOT_ACTION_DESIRE_HIGH, bot, sCastType, sCastMotive
-		end
-
+	local target = J.GetProperTarget(bot)
+	if nearEnemyCount >= 2
+		and ((J.IsGoingOnSomeone(bot) and J.IsValidHero(target)
+			and not J.IsSuspiciousIllusion(target) and J.IsInRange(bot, target, 800))
+			or bot:WasRecentlyDamagedByAnyHero(2.0))
+	then
+		return BOT_ACTION_DESIRE_HIGH, bot, sCastType, '近距离交战防护'
 	end
 
 	return BOT_ACTION_DESIRE_NONE
