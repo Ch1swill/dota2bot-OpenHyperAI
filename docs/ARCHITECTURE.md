@@ -343,6 +343,9 @@ Key files:
 Local autostart runs in the **server VScript VM** via `game/gameinit.lua` and
 `game/ch1_fretbots_autostart.lua`. It waits for hero selection and bot player slots,
 then sends `sv_cheats 1; script_reload_code bots/fretbots` once per server VM.
+The map guard accepts both `dota` (direct console games) and `start` (GC-created
+local lobbies, which stream Dota into that host map). Checking only for `dota`
+silently prevents startup through the Custom Lobby UI.
 Events are supplemented by a 0.5-second `info_target` thinker because bot slots
 can appear after selection/spawn notifications. Standard Dota maps return nil
 from `GameRules:GetGameModeEntity()`, so use an independent entity, as FretBots'

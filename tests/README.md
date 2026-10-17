@@ -41,6 +41,8 @@ The FretBots startup suite loads the actual `game/gameinit.lua` hook and loader
 with a simulated server API. It covers early startup, late player slots,
 per-match/reentrant dispatch, script reloads, manual startup, opt-out settings,
 client/bot/dedicated VMs, demo maps, human-only games, error handling, and cleanup.
+It covers the `start` host map used by GC-created local lobbies, including early
+initialization and late bot slots. These three cases fail with the old `dota`-only guard.
 It also models late bot insertion without further events, native thinker startup
 and removal, a nil custom-game mode entity on the standard map, and the higher
 numeric IDs of map-loading/player-draft states. These reproduce gaps in the
@@ -59,12 +61,22 @@ initial installation, repeat installation, and replacement of an older hook
 preserve existing initialization code, backups, line endings, and customization.
 
 On 2026-10-15, the installed startup hook was also checked in the actual Dota 2
-engine over two consecutive local bot games in one client session (the second
+engine over two consecutive offline bot games in one client session (the second
 launched with `map dota gamemode 23`). The VConsole driver selected a hero and
 observed exactly one `Starting Fretbots mode` message and the welcome notification
 per game. It did not send `sv_cheats` or a FretBots reload command. The original
 late-insertion case failed before the fix; the startup suite now uses the native
 state constants and a nil game-mode entity to preserve that coverage.
+
+On 2026-10-17, a reproduction through **Play Dota → Custom Lobby → Create →
+Local Host → Turbo** failed with the old map guard. After accepting the lobby's
+`start` host map, two new lobbies in one normal client session each produced
+exactly one automatic-dispatch message, one `Starting Fretbots mode` message,
+the FretBots welcome notification and difficulty voting. No startup command was
+entered through the console. The first lobby also reached pregame and completed
+difficulty/ally-scale selection (2 / 0.5). This verifies startup, not the remaining
+push/Ping gameplay checks below; the engine log also contained opaque script
+runtime errors during pregame, without a traceback identifying their source.
 
 For TypeScript changes, compile and regenerate `bots/FunLib/aba_push.lua` before
 running the tests. The repository currently needs `npm ci --legacy-peer-deps`

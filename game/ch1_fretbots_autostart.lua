@@ -73,7 +73,12 @@ TryStart = function()
 	-- Those inserts do not reliably produce another event; keep checking until ready.
 	if gameState < DOTA_GAMERULES_STATE_HERO_SELECTION then return end
 	if gameState == DOTA_GAMERULES_STATE_PLAYER_DRAFT then return end
-	if type(GetMapName) == 'function' and GetMapName() ~= 'dota' then Stop() return end
+	-- GC-created local lobbies keep the "start" host map while streaming Dota.
+	-- Direct console games use "dota"; both are standard bot-game entry points.
+	if type(GetMapName) == 'function' then
+		local map = GetMapName()
+		if map ~= 'dota' and map ~= 'start' then Stop() return end
+	end
 	if Flags ~= nil and Flags.isFretBotsInitialized then state.sent = true Stop() return end
 	StartPolling()
 	if not HasBots() then return end
