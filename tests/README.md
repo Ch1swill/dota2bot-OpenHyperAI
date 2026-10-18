@@ -8,7 +8,6 @@ lua tests/assemble_ping_regression.lua
 lua tests/fretbots_autostart_regression.lua
 lua tests/bkb_usage_regression.lua
 lua tests/engagement_safety_regression.lua
-lua tests/human_backpack_regression.lua
 ```
 
 If Lua is unavailable, use the temporary Fengari runner:
@@ -19,7 +18,6 @@ npx --yes --package=fengari-node-cli@0.1.0 fengari tests/assemble_ping_regressio
 npx --yes --package=fengari-node-cli@0.1.0 fengari tests/fretbots_autostart_regression.lua
 npx --yes --package=fengari-node-cli@0.1.0 fengari tests/bkb_usage_regression.lua
 npx --yes --package=fengari-node-cli@0.1.0 fengari tests/engagement_safety_regression.lua
-npx --yes --package=fengari-node-cli@0.1.0 fengari tests/human_backpack_regression.lua
 ```
 
 The tests load the shipped Lua files with a simulated Dota bot API. They cover
@@ -28,6 +26,14 @@ retry cooldowns in Turbo and normal modes, active Tormentor combat, late-game
 push desire, movement during a cache TTL, and the existing health, solo-push,
 numbers and base-defense safety gates. An optional argument selects a different
 `bots` directory, allowing the same scenarios to run against an older snapshot.
+
+The nine-slot human inventory experiment was reverted on 2026-10-18 after a
+real player's game crashed on entry. The user's dump and the earlier full-roster
+test dump both report a null read at `client.dll + 0x148fbc2`. Passing checks on
+an unassigned server-side test hero did not validate the client hero/HUD path.
+There is no nine-slot startup hook in the shipped FretBots entry point. Any
+future inventory change needs a real human hero entering a Local Host Custom
+Lobby before it can be enabled; isolated server fixtures are insufficient.
 
 The assembly suite covers ground pings across the map, journeys beyond the ping
 recency window, redirection, arrival, mode interruptions, multiple human slots,
@@ -69,22 +75,6 @@ existing immunity, disables and spell queues. No other item is suppressed when
 BKB is unavailable or has no reason to activate. These are decision/dispatch
 checks, not an in-engine reproduction of a particular hero diving into a team.
 The optional argument selects a different `bots` directory for baseline checks.
-
-The human-backpack suite loads the real server manager and Lua modifier. It
-covers human/bot/team/owner filtering, all three backpack slots, idempotence,
-native passive ownership, item movement/replacement/sale/consumption, muting,
-non-stacking effects, cleanup, late hero assignment, opt out and VM/map guards.
-Its optional argument selects an installed or snapshot `bots` directory.
-
-On 2026-10-18 a native offline fixture loaded the shipped manager and modifier.
-It verified passive attributes with all nine slots filled; phase boots, Ghost
-Scepter and BKB activation from slots 7, 6 and 8 respectively; movement back into
-a main slot without duplicate/lost bonuses; removal of a sold item's passive;
-death/respawn persistence; and an Aghanim's Scepter upgrade from the backpack.
-That fixture temporarily admitted one unassigned test hero, without changing
-production eligibility. Human/bot filtering and late hero assignment are covered
-by API regressions; the attempted full roster fixture did not complete its human
-selection stage. Only a test client was used, and temporary probes were removed.
 
 The engagement suite loads the real safety module, `jmz_func`, waiting mode and
 hero cast dispatchers. It covers a healthy solo dive, distant/unavailable backup,
@@ -137,9 +127,6 @@ because its locked TSTL and TypeScript peer versions differ.
 
 These tests do not run the game engine. Verify in a Turbo local lobby that:
 
-- Human main heroes automatically gain backpack activation and passive bonuses,
-  while bots do not. Check active items in each of slots 6, 7 and 8; movement,
-  selling, muting and respawning must not leave missing or duplicated bonuses.
 - With the startup installer applied, start a new **Local Host** game with bots
   and select **Local Dev Script** for both teams. FretBots starts once after hero
   selection begins without a console command, and its difficulty/voting setup

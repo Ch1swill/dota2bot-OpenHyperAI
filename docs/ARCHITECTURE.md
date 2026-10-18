@@ -388,19 +388,6 @@ settings. The PowerShell installer in `tools/` backs up the installed Valve
 `gameinit.lua` and adds only the hook, preserving version-specific bindings.
 Bot scripts cannot start FretBots directly because their VM has no `GameRules`.
 
-`FretBots/HumanBackpack.lua` starts with the server FretBots entry point. In local
-standard-map games, it polls selected player heroes every 0.5 seconds and applies
-`modifier_ch1_human_backpack` only to real human main heroes (`IsFakeClient` is
-checked). The modifier uses `MODIFIER_STATE_CAN_USE_BACKPACK_ITEMS` for native
-activation. That state alone does not provide passive bonuses in this engine:
-the modifier supplies missing native item intrinsics for slots 6-8, tracking
-only its own handles and reconciling them every 0.2 seconds. Moving an item back
-to slots 0-5 refreshes normal provisioning; stash moves, sale, consumption and
-muting remove the supplied intrinsic. Native non-stacking effects are respected.
-Death preserves the manager, while illusions/clones/summons and bots are excluded.
-`Customize.Human_Backpack_Active = false` opts out for subsequent games; an absent
-setting defaults to enabled. No item definitions or global cooldown rules change.
-
 ---
 
 ## 10. Customization System

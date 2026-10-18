@@ -30,6 +30,9 @@
 3. Select **Local Dev Script** for both Radiant and Dire bots. The upstream Workshop entry loads the upstream version.
 4. Start a new game - bots auto-pick and play.
 
+The experimental nine-slot human inventory feature has been removed after a
+client crash during hero entry. Items use the normal six active inventory slots.
+
 ### Waiting for backup
 
 Bots assess support at the intended fight before engaging a visible enemy group.
@@ -68,21 +71,6 @@ to disable automatic startup. If the setting is absent in an existing customizat
 startup defaults to enabled. Dedicated servers, hero demo maps, and games without
 bots do not run the command. If a Dota update replaces `game/gameinit.lua`, run the
 installer again. FretBots difficulty and voting settings work as before.
-
-### Nine active item slots for human players
-
-Local FretBots games enable the three backpack slots for each human player's
-main hero. Backpack items can be activated and provide their native passive
-modifiers. Bots retain six active slots; illusions, clones and summons are not
-granted the extra inventory effect. Items retain native cooldown, swap-delay,
-stacking, targeting and mute rules.
-
-The effect starts automatically with FretBots and survives death. Moving,
-selling or consuming an item removes its extra passive, and moving it into a
-main slot restores normal item provisioning without doubling the bonus.
-Set `Customize.Human_Backpack_Active = false` in the active `Customize/general.lua`
-and start a new game to disable this feature. Older customizations without that
-setting default to enabled.
 
 For more about **FretBots mode** (harder bots, neutral items, chatbot):
 [Upstream installation guide](https://github.com/forest0xia/dota2bot-OpenHyperAI/discussions/68)
