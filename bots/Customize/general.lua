@@ -100,6 +100,10 @@ Customize.Dire_Names = {
 -- Group pushing may increase the difficulty but can reduce the game experience. 
 Customize.Force_Group_Push_Level = 1
 
+-- In local FretBots games, human main heroes can use backpack items and their
+-- native passive bonuses. Bots retain six active slots. Set false to opt out.
+Customize.Human_Backpack_Active = true
+
 -- The Enhanced Fretbots mode settings:
 -- For more about Fretbots mode: https://github.com/forest0xia/dota2bot-OpenHyperAI/discussions/68
 -- Note: these settings below will override the pre-defind settings in Fretbots folder.

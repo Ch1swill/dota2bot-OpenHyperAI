@@ -36,6 +36,8 @@ require 'bots.FretBots.RoleDetermination'
 -- Neutral items
 require 'bots.FretBots.NeutralItems'
 require 'bots.FretBots.modifiers.Modifier'
+-- Nine active item slots are reserved for human player heroes, never bots.
+require('bots.FretBots.HumanBackpack').Start()
 
 -- Instantiate ourself
 if FretBots == nil then
