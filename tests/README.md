@@ -35,6 +35,21 @@ There is no nine-slot startup hook in the shipped FretBots entry point. Any
 future inventory change needs a real human hero entering a Local Host Custom
 Lobby before it can be enabled; isolated server fixtures are insufficient.
 
+A follow-up native investigation on 2026-10-18 reproduced that same exception
+with a minimal Lua modifier containing only `IsHidden` and `IsPurgable`: no
+backpack state, items, modifier properties or polling were involved. The dump
+identifies a `CDOTA_Modifier_Lua` on the client; its initialization dereferences
+a null client scripting object, consistent with an unavailable client script VM.
+Both `cl_script_reload` and `cl_script_reload_code`
+reported `Scripting disabled or no server running` on the ordinary `dota` map.
+Requiring the modifier on the server is therefore not a fix for this path.
+The retained native `techies_spoons_stash` ability/modifier also failed to cast
+Phase Boots from slot 6 in the installed game build. It is not a replacement
+for the removed backpack behavior. Do not restore the reverted startup hook
+based on server-only checks or on the existence of the old ability name.
+An addon with client scripting must be validated separately before proposing a
+change to the user's normal lobby workflow. The inventory feature remains off.
+
 The assembly suite covers ground pings across the map, journeys beyond the ping
 recency window, redirection, arrival, mode interruptions, multiple human slots,
 respawning and action pauses. Hero attacks recruit within 2500 units of the
