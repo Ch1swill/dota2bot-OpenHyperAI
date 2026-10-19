@@ -1,11 +1,13 @@
 param(
     [Parameter(Mandatory = $true)]
     [string]$DotaRoot,
-    [switch]$CreateDesktopShortcut,
-    [string]$SteamExe
+    [switch]$CreateDesktopShortcut
 )
 
 $ErrorActionPreference = 'Stop'
+if ($CreateDesktopShortcut) {
+    throw 'Automatic addon launch is disabled after a reported global hotkey reset. Restore and back up the complete personal settings before further native testing.'
+}
 $taskDotaRoot = [IO.Path]::GetFullPath($DotaRoot).TrimEnd('\')
 $taskExecutable = Join-Path $taskDotaRoot 'game\bin\win64\dota2.exe'
 if (-not (Test-Path -LiteralPath $taskExecutable -PathType Leaf)) {
@@ -35,24 +37,4 @@ foreach ($taskFile in Get-ChildItem -LiteralPath $taskSource -File -Recurse) {
         throw "Addon copy verification failed: $taskRelative"
     }
 }
-$taskShortcut = $null
-if ($CreateDesktopShortcut) {
-    if (-not $SteamExe) {
-        $SteamExe = (Get-ItemProperty -LiteralPath 'HKCU:\Software\Valve\Steam' -Name SteamExe).SteamExe
-    }
-    $taskSteamExe = [IO.Path]::GetFullPath($SteamExe)
-    if (-not (Test-Path -LiteralPath $taskSteamExe -PathType Leaf)) {
-        throw 'Steam.exe was not found; specify -SteamExe.'
-    }
-    $taskShortcut = Join-Path ([Environment]::GetFolderPath('Desktop')) 'Open Hyper AI Ch1 - 真人九格.lnk'
-    $taskShell = New-Object -ComObject WScript.Shell
-    $taskLink = $taskShell.CreateShortcut($taskShortcut)
-    # Let Steam apply the user's launch options, regional client and Cloud profile.
-    $taskLink.TargetPath = $taskSteamExe
-    $taskLink.WorkingDirectory = [IO.Path]::GetDirectoryName($taskSteamExe)
-    $taskLink.Arguments = '-applaunch 570 +dota_per_unit_keybindings_disabled_during_custom_games 0 +dota_launch_custom_game ch1_inventory_lab dota'
-    $taskLink.IconLocation = $taskExecutable + ',0'
-    $taskLink.Description = 'Exit Dota 2 first, then open the human-only nine-slot custom map.'
-    $taskLink.Save()
-}
-[PSCustomObject]@{ addon = $taskTarget; backup = $taskBackup; shortcut = $taskShortcut } | ConvertTo-Json -Compress
+[PSCustomObject]@{ addon = $taskTarget; backup = $taskBackup } | ConvertTo-Json -Compress

@@ -54,7 +54,12 @@ client scripting and is launched on the installed official `dota` map. On
 2026-10-19 the user confirmed that nine-slot effects and the adjusted start timing
 worked in that addon. The launcher now uses Steam's normal app launch path and
 allows per-unit bindings in custom games; complete personal-keybinding inheritance
-still needs confirmation through the user's original Dota launch path.
+was not validated. The reporter subsequently confirmed a global personal-hotkey
+reset affecting ordinary games as well. Automatic addon launch is disabled while
+the overwrite is investigated and complete settings recovery is attempted. Do not
+continue native startup testing without a verified backup of the complete personal
+keybindings; ordinary Lua/config hashes do not establish that Steam profile files
+were preserved.
 
 `tests/ch1_inventory_native.lua` is an opt-in engine fixture, not an offline
 test and not loaded during normal play. Copy it into the addon as
