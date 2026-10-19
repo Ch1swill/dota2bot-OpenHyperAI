@@ -1,0 +1,13 @@
+"AddonInfo"
+{
+    "maps" "dota"
+    "IsPlayable" "1"
+    "MinimalPrecache" "0"
+    "EnablePickRules" "1"
+    "dota"
+    {
+        "MaxPlayers" "10"
+    }
+    "addon_title" "Open Hyper AI Ch1 - Human Inventory Lab"
+    "addon_description" "Local test addon. Nine active slots for human main heroes only."
+}

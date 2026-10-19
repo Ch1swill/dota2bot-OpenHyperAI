@@ -48,7 +48,21 @@ Phase Boots from slot 6 in the installed game build. It is not a replacement
 for the removed backpack behavior. Do not restore the reverted startup hook
 based on server-only checks or on the existence of the old ability name.
 An addon with client scripting must be validated separately before proposing a
-change to the user's normal lobby workflow. The inventory feature remains off.
+change to the user's normal lobby workflow. The inventory feature remains off
+in ordinary BOT lobbies. The separate `addons/ch1_inventory_lab` addon initializes
+client scripting and is launched on the installed official `dota` map. On
+2026-10-19 the user confirmed that nine-slot effects and the adjusted start timing
+worked in that addon. The launcher now uses Steam's normal app launch path and
+allows per-unit bindings in custom games; complete personal-keybinding inheritance
+still needs confirmation through the user's original Dota launch path.
+
+`tests/ch1_inventory_native.lua` is an opt-in engine fixture, not an offline
+test and not loaded during normal play. Copy it into the addon as
+`scripts/vscripts/ch1_inventory/native_test.lua`, enter with a human hero and bots,
+then run `script_reload_code ch1_inventory/native_test`. It replaces the test
+hero's inventory and kills/respawns that hero. It covers human-only eligibility,
+three backpack actives, passive stats, swapping, item removal and respawning.
+Passing it does not validate HUD input or arbitrary special-item compatibility.
 
 The assembly suite covers ground pings across the map, journeys beyond the ping
 recency window, redirection, arrival, mode interruptions, multiple human slots,

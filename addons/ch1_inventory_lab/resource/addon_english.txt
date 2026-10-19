@@ -1,0 +1,9 @@
+"lang"
+{
+    "Language" "English"
+    "Tokens"
+    {
+        "addon_game_name" "Open Hyper AI Ch1 - Human Nine Slots"
+        "addon_game_description" "All nine carried item slots work for human main heroes. Bots keep the standard inventory."
+    }
+}
