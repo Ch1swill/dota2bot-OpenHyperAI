@@ -9,6 +9,7 @@ lua tests/fretbots_autostart_regression.lua
 lua tests/bkb_usage_regression.lua
 lua tests/engagement_safety_regression.lua
 lua tests/ch1_addon_bots_regression.lua
+lua tests/team_players_regression.lua
 ```
 
 If Lua is unavailable, use the temporary Fengari runner:
@@ -20,6 +21,7 @@ npx --yes --package=fengari-node-cli@0.1.0 fengari tests/fretbots_autostart_regr
 npx --yes --package=fengari-node-cli@0.1.0 fengari tests/bkb_usage_regression.lua
 npx --yes --package=fengari-node-cli@0.1.0 fengari tests/engagement_safety_regression.lua
 npx --yes --package=fengari-node-cli@0.1.0 fengari tests/ch1_addon_bots_regression.lua
+npx --yes --package=fengari-node-cli@0.1.0 fengari tests/team_players_regression.lua
 ```
 
 The tests load the shipped Lua files with a simulated Dota bot API. They cover
@@ -60,7 +62,7 @@ was not validated. The reporter subsequently confirmed a global personal-hotkey
 reset affecting ordinary games as well. Automatic addon launch is disabled while
 the overwrite is investigated. On 2026-10-22 the reporter confirmed manually
 restoring the complete bindings, and the restored personal configuration was
-backed up locally without starting Dota or writing Steam profile files. Do not
+backed up locally without starting the human client or writing Steam profile files. Do not
 continue native startup testing without a verified backup of the complete personal
 keybindings; ordinary Lua/config hashes do not establish that Steam profile files
 were preserved.
@@ -69,14 +71,33 @@ were preserved.
 eligibility module with a simulated server API. It covers passive enemy bots with
 unfair allied bots, a human on either team, delayed heroes/slots, hero replacement,
 single initialization per hero, invalid/illusion/spectator exclusions, human-only
-inventory effects, cheat-gated roster filling and match-end cleanup. The old entry
-point fails four of these eight scenarios because it never sets combat difficulty.
-The fix sets both teams' real bot heroes to engine difficulty 4 (unfair), matching
+inventory effects, cheat-gated roster filling, match-end cleanup, current official
+rune rules and free personal couriers before roster filling (nine scenarios).
+The entry point sets both teams' real bot heroes to engine difficulty 4 (unfair), matching
 the native hero API used by Valve's installed `tutorial_assist_game` example.
 This is independent of FretBots' bonus scale. The suite verifies initialization,
-not native combat behavior; the reported enemy inactivity still needs an in-game
-retest. No game launch, personal bindings or ordinary bot files are changed by
-this fix. An optional argument selects another addon directory for baseline checks.
+not native combat behavior. An optional argument selects another addon directory
+for baseline checks.
+
+`team_players_regression.lua` loads the real global bot overrides. Seven cases
+cover empty/partial Dire rosters becoming full, same-size roster changes, late
+human assignment, ordinary-lobby human ID correction and bypass, custom-map Dire
+humans, and a fresh Radiant roster. Four fail with the old permanent Dire cache.
+
+An isolated native dedicated server reproduced the empty Dire roster on
+2026-10-22: native IDs were 5,6,7,8,9 while the overridden result stayed empty.
+Role lookup then failed on `debug.traceback` with `debug` unavailable in the bot VM.
+Before the fix, Radiant damage events reached 302 while Dire remained at nine;
+no couriers existed. After the roster fix and addon rule setup, Dire damage events
+grew past 300, with real hero damage, last hits, ten personal couriers and no Lua
+runtime errors observed in that test. A second native run confirmed four opening
+bounty runes, water runes at 2:00 and 4:00, and the first power rune (invisibility
+in that run) at 6:00. Courier owner IDs were exactly 0 through 9. Automatic
+surrender was disabled only in the isolated all-bot test so it could run beyond
+the no-human timeout; that override is absent from the shipped addon.
+Temporary callback instrumentation was removed before the
+successful run. This server test does not revalidate human HUD/keybinding behavior;
+all personal profile files are separately backed up and hash-checked.
 
 `tests/ch1_inventory_native.lua` is an opt-in engine fixture, not an offline
 test and not loaded during normal play. Copy it into the addon as

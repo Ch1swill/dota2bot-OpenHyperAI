@@ -24,6 +24,10 @@ function Activate()
     GameRules:SetShowcaseTime(0)
     GameRules:SetPreGameTime(90)
     local mode=GameRules:GetGameModeEntity()
+    -- Custom games otherwise use legacy rune spawns and no personal couriers.
+    -- Opt into the installed game's current rules before any heroes spawn.
+    mode:SetUseDefaultDOTARuneSpawnLogic(true)
+    mode:SetFreeCourierModeEnabled(true)
     mode:SetBotThinkingEnabled(true)
     mode:SetDraftingHeroPickSelectTimeOverride(60)
     local botsPopulated=false

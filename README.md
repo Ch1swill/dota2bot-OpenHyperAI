@@ -30,8 +30,11 @@
 3. Select **Local Dev Script** for both Radiant and Dire bots. The upstream Workshop entry loads the upstream version.
 4. Start a new game - bots auto-pick and play.
 
-The experimental nine-slot human inventory feature has been removed after a
-client crash during hero entry. Items use the normal six active inventory slots.
+Ordinary BOT lobbies use the normal six active inventory slots. Human-only
+nine-slot inventory is available through the separate
+[local custom addon](addons/ch1_inventory_lab/README.md) on the installed official
+Dota map. It enables current official rune rules and personal couriers. Update
+the `bots` folder as well so the Dire roster refresh fix is included.
 
 ### Waiting for backup
 

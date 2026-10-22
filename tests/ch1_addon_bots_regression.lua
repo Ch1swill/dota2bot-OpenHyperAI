@@ -50,6 +50,8 @@ local function world(humanTeam)
         env.GameRules[method] = function() end
     end
     w.mode = {
+        SetUseDefaultDOTARuneSpawnLogic = function(_, enabled) w.currentRuneRules = enabled end,
+        SetFreeCourierModeEnabled = function(_, enabled) w.personalCouriers = enabled end,
         SetBotThinkingEnabled = function(_, enabled) w.thinking = enabled end,
         SetDraftingHeroPickSelectTimeOverride = function() end,
         SetContextThink = function(_, _, callback) w.tick = callback end,
@@ -98,6 +100,13 @@ local function world(humanTeam)
     end
     return w
 end
+
+test('current official rune rules and personal couriers are enabled before bot filling', function()
+    local w = world(2)
+    w:boot()
+    assert(w.currentRuneRules == true and w.personalCouriers == true)
+    assert(w.fills == 0, 'Roster filled before rules were configured')
+end)
 
 test('enemy passive bots receive combat difficulty while allied bots stay unfair', function()
     local w = world(2)
