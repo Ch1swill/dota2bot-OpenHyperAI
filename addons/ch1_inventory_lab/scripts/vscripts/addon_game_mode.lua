@@ -27,6 +27,7 @@ function Activate()
     mode:SetBotThinkingEnabled(true)
     mode:SetDraftingHeroPickSelectTimeOverride(60)
     local botsPopulated=false
+    local configuredBotHeroes={}
     mode:SetContextThink('Ch1InventoryLab',function()
         local state=GameRules:State_Get()
         if state==DOTA_GAMERULES_STATE_POST_GAME or state==DOTA_GAMERULES_STATE_DISCONNECT then
@@ -48,9 +49,23 @@ function Activate()
             end
         end
         for id=0,DOTA_MAX_TEAM_PLAYERS-1 do
-            if PlayerResource:IsValidPlayerID(id) and not PlayerResource:IsFakeClient(id) then
+            if PlayerResource:IsValidPlayerID(id) then
                 local hero=PlayerResource:GetSelectedHeroEntity(id)
-                if backpack.Apply(hero) then
+                if PlayerResource:IsFakeClient(id) then
+                    local team=PlayerResource:GetTeam(id)
+                    if (team==DOTA_TEAM_GOODGUYS or team==DOTA_TEAM_BADGUYS)
+                        and hero~=nil and not hero:IsNull() and hero:IsRealHero() and not hero:IsIllusion()
+                        and hero:GetPlayerOwnerID()==id and hero:GetTeamNumber()==team
+                        and configuredBotHeroes[id]~=hero then
+                        -- Do not rely on the lobby difficulties inherited by BotPopulate.
+                        -- Valve's tutorial_assist_game uses this hero API: 0 is passive,
+                        -- 4 is unfair. Set both teams explicitly, independent of lobby defaults
+                        -- and FretBots' separate bonus scale. Wait for each real hero to exist.
+                        hero:SetBotDifficulty(4)
+                        configuredBotHeroes[id]=hero
+                        print('[Ch1InventoryLab] bot AI ready player='..id..' team='..team..' difficulty=4')
+                    end
+                elseif backpack.Apply(hero) then
                     print('[Ch1InventoryLab] human modifier applied player='..id..' hero='..hero:GetUnitName())
                 end
             end

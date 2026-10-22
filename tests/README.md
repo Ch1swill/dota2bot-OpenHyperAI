@@ -8,6 +8,7 @@ lua tests/assemble_ping_regression.lua
 lua tests/fretbots_autostart_regression.lua
 lua tests/bkb_usage_regression.lua
 lua tests/engagement_safety_regression.lua
+lua tests/ch1_addon_bots_regression.lua
 ```
 
 If Lua is unavailable, use the temporary Fengari runner:
@@ -18,6 +19,7 @@ npx --yes --package=fengari-node-cli@0.1.0 fengari tests/assemble_ping_regressio
 npx --yes --package=fengari-node-cli@0.1.0 fengari tests/fretbots_autostart_regression.lua
 npx --yes --package=fengari-node-cli@0.1.0 fengari tests/bkb_usage_regression.lua
 npx --yes --package=fengari-node-cli@0.1.0 fengari tests/engagement_safety_regression.lua
+npx --yes --package=fengari-node-cli@0.1.0 fengari tests/ch1_addon_bots_regression.lua
 ```
 
 The tests load the shipped Lua files with a simulated Dota bot API. They cover
@@ -52,14 +54,29 @@ change to the user's normal lobby workflow. The inventory feature remains off
 in ordinary BOT lobbies. The separate `addons/ch1_inventory_lab` addon initializes
 client scripting and is launched on the installed official `dota` map. On
 2026-10-19 the user confirmed that nine-slot effects and the adjusted start timing
-worked in that addon. The launcher now uses Steam's normal app launch path and
-allows per-unit bindings in custom games; complete personal-keybinding inheritance
+worked in that addon. That test launcher used Steam's normal app launch path and
+allowed per-unit bindings in custom games; complete personal-keybinding inheritance
 was not validated. The reporter subsequently confirmed a global personal-hotkey
 reset affecting ordinary games as well. Automatic addon launch is disabled while
-the overwrite is investigated and complete settings recovery is attempted. Do not
+the overwrite is investigated. On 2026-10-22 the reporter confirmed manually
+restoring the complete bindings, and the restored personal configuration was
+backed up locally without starting Dota or writing Steam profile files. Do not
 continue native startup testing without a verified backup of the complete personal
 keybindings; ordinary Lua/config hashes do not establish that Steam profile files
 were preserved.
+
+`ch1_addon_bots_regression.lua` loads the real addon entry point and human inventory
+eligibility module with a simulated server API. It covers passive enemy bots with
+unfair allied bots, a human on either team, delayed heroes/slots, hero replacement,
+single initialization per hero, invalid/illusion/spectator exclusions, human-only
+inventory effects, cheat-gated roster filling and match-end cleanup. The old entry
+point fails four of these eight scenarios because it never sets combat difficulty.
+The fix sets both teams' real bot heroes to engine difficulty 4 (unfair), matching
+the native hero API used by Valve's installed `tutorial_assist_game` example.
+This is independent of FretBots' bonus scale. The suite verifies initialization,
+not native combat behavior; the reported enemy inactivity still needs an in-game
+retest. No game launch, personal bindings or ordinary bot files are changed by
+this fix. An optional argument selects another addon directory for baseline checks.
 
 `tests/ch1_inventory_native.lua` is an opt-in engine fixture, not an offline
 test and not loaded during normal play. Copy it into the addon as
