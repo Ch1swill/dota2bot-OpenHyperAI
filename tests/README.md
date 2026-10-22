@@ -9,6 +9,7 @@ lua tests/fretbots_autostart_regression.lua
 lua tests/bkb_usage_regression.lua
 lua tests/engagement_safety_regression.lua
 lua tests/ch1_addon_bots_regression.lua
+lua tests/ch1_bot_control_regression.lua
 lua tests/team_players_regression.lua
 ```
 
@@ -21,6 +22,7 @@ npx --yes --package=fengari-node-cli@0.1.0 fengari tests/fretbots_autostart_regr
 npx --yes --package=fengari-node-cli@0.1.0 fengari tests/bkb_usage_regression.lua
 npx --yes --package=fengari-node-cli@0.1.0 fengari tests/engagement_safety_regression.lua
 npx --yes --package=fengari-node-cli@0.1.0 fengari tests/ch1_addon_bots_regression.lua
+npx --yes --package=fengari-node-cli@0.1.0 fengari tests/ch1_bot_control_regression.lua
 npx --yes --package=fengari-node-cli@0.1.0 fengari tests/team_players_regression.lua
 ```
 
@@ -30,6 +32,13 @@ retry cooldowns in Turbo and normal modes, active Tormentor combat, late-game
 push desire, movement during a cache TTL, and the existing health, solo-push,
 numbers and base-defense safety gates. An optional argument selects a different
 `bots` directory, allowing the same scenarios to run against an older snapshot.
+
+The addon and bot-control suites also check owner-only bot hero initialization
+on both teams and rejection of human orders to bot-owned units, including movement,
+casting and mixed selections. AI/server orders, a human's own units, real-human
+sharing and addon cleanup remain allowed. These policy checks simulate the API;
+a real client must separately verify that selecting either team's bot cannot
+command it, while the human's own courier and ALT pings still work.
 
 The nine-slot human inventory experiment was reverted on 2026-10-18 after a
 real player's game crashed on entry. The user's dump and the earlier full-roster

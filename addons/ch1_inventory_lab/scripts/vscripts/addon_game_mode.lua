@@ -13,6 +13,7 @@ function Activate()
     -- Enable it here so a fresh desktop launch does not depend on a console command.
     SendToServerConsole('sv_cheats 1')
     local backpack=require('ch1_inventory.human_backpack')
+    local botControl=require('ch1_inventory.bot_control')
     GameRules:SetCustomGameTeamMaxPlayers(DOTA_TEAM_GOODGUYS, 5)
     GameRules:SetCustomGameTeamMaxPlayers(DOTA_TEAM_BADGUYS, 5)
     GameRules:SetIgnoreLobbyTeamsInCustomGame(false)
@@ -30,6 +31,9 @@ function Activate()
     mode:SetFreeCourierModeEnabled(true)
     mode:SetBotThinkingEnabled(true)
     mode:SetDraftingHeroPickSelectTimeOverride(60)
+    mode:SetExecuteOrderFilter(function(_, order)
+        return botControl.AllowOrder(order)
+    end,{})
     local botsPopulated=false
     local configuredBotHeroes={}
     mode:SetContextThink('Ch1InventoryLab',function()
@@ -66,6 +70,7 @@ function Activate()
                         -- 4 is unfair. Set both teams explicitly, independent of lobby defaults
                         -- and FretBots' separate bonus scale. Wait for each real hero to exist.
                         hero:SetBotDifficulty(4)
+                        botControl.ConfigureHero(hero,id)
                         configuredBotHeroes[id]=hero
                         print('[Ch1InventoryLab] bot AI ready player='..id..' team='..team..' difficulty=4')
                     end

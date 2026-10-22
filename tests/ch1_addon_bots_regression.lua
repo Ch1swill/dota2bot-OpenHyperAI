@@ -54,6 +54,9 @@ local function world(humanTeam)
         SetFreeCourierModeEnabled = function(_, enabled) w.personalCouriers = enabled end,
         SetBotThinkingEnabled = function(_, enabled) w.thinking = enabled end,
         SetDraftingHeroPickSelectTimeOverride = function() end,
+        SetExecuteOrderFilter = function(_, callback, context)
+            w.orderFilter=function(order) return callback(context,order) end
+        end,
         SetContextThink = function(_, _, callback) w.tick = callback end,
     }
     env.GameRules.GetGameModeEntity = function() return w.mode end
@@ -65,8 +68,11 @@ local function world(humanTeam)
     }
     local backpack = loadIn(sourceRoot .. '/scripts/vscripts/ch1_inventory/human_backpack.lua', env)
     env.require = function(name)
-        assert(name == 'ch1_inventory.human_backpack', 'Unexpected dependency: ' .. name)
-        return backpack
+        if name == 'ch1_inventory.human_backpack' then return backpack end
+        if name == 'ch1_inventory.bot_control' then
+            return loadIn(sourceRoot .. '/scripts/vscripts/ch1_inventory/bot_control.lua', env)
+        end
+        error('Unexpected dependency: ' .. name)
     end
     function w:hero(id, options)
         local opts = options or {}
@@ -80,6 +86,11 @@ local function world(humanTeam)
         hero.SetBotDifficulty = function(_, difficulty)
             hero.difficulty = difficulty
             hero.settings = hero.settings + 1
+        end
+        hero.SetControllableByAllPlayers = function(_, enabled) hero.allPlayerControl = enabled end
+        hero.SetControllableByPlayer = function(_, owner, skipAdjust)
+            hero.controller = owner
+            hero.skipAdjust = skipAdjust
         end
         hero.HasModifier = function() return hero.modifiers > 0 end
         hero.AddNewModifier = function()
@@ -138,6 +149,24 @@ test('human gets nine slots and bots never get the human modifier', function()
     assert(w.slots[0].hero.settings == 0)
     assert(w.slots[0].hero.modifiers == 1)
     for id = 1, 9 do assert(w.slots[id].hero.modifiers == 0, 'Bot ' .. id .. ' got nine slots') end
+end)
+
+test('both teams retain their own bot controllers without all-player control', function()
+    for _,humanTeam in ipairs({2,3}) do
+        local w=world(humanTeam)
+        w:boot()
+        w.state=7
+        w.tick()
+        assert(type(w.orderFilter)=='function', 'Missing server-side order protection')
+        for id=0,9 do
+            local hero=w.slots[id].hero
+            if w.slots[id].fake then
+                assert(hero.allPlayerControl==false and hero.controller==id and hero.skipAdjust==true)
+            else
+                assert(hero.allPlayerControl==nil and hero.controller==nil, 'Human control changed')
+            end
+        end
+    end
 end)
 
 test('late heroes and late player slots are initialized after roster filling', function()
