@@ -1,0 +1,9 @@
+"lang"
+{
+    "Language" "schinese"
+    "Tokens"
+    {
+        "addon_game_name" "Open Hyper AI Ch1 · 真人九格"
+        "addon_game_description" "真人主英雄可使用全部九格装备。BOT 保持标准六格。"
+    }
+}

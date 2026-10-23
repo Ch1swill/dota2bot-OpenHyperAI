@@ -188,3 +188,10 @@ if LinkLuaModifier ~= nil then
 		end
 	end
 end
+
+-- BEGIN OHA.Ch1 FretBots autostart
+if type(ListenToGameEvent) == 'function' and type(SendToServerConsole) == 'function' then
+	local ok, err = pcall(require, 'game.ch1_fretbots_autostart')
+	if not ok then print('[OHA.Ch1] Unable to arm FretBots autostart: ' .. tostring(err)) end
+end
+-- END OHA.Ch1 FretBots autostart

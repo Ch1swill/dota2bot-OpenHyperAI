@@ -70,6 +70,7 @@ local function CapForLanePush(desire)
 end
 
 function GetDesire()
+    if J.ShouldWaitForBackup(bot) then return BOT_MODE_DESIRE_NONE end
     -- local cacheKey = 'GetTeamRoamDesire'..tostring(bot:GetPlayerID())
     -- local cachedVar = J.Utils.GetCachedVars(cacheKey, 0.2 * (1 + Customize.ThinkLess))
     -- if DotaTime() > 30 and cachedVar ~= nil then return cachedVar end
@@ -294,6 +295,7 @@ end
 -- ==============================
 function Think()
     if J.CanNotUseAction(bot) then return end
+    if J.ShouldWaitForBackup(bot) then return end
 	-- diabled think less to avoid failing to last hit
     -- if J.Utils.IsBotThinkingMeaningfulAction(bot, Customize.ThinkLess, "team_roam") then return end
 

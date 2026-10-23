@@ -13,7 +13,6 @@ local Utils = require( GetScriptDirectory()..'/FunLib/utils')
 
 -- Override this func for the script to use
 local orig_GetTeamPlayers = GetTeamPlayers
-local direTeamPlaters = nil
 function GetTeamPlayers(nTeam, bypass)
 	if bypass then return orig_GetTeamPlayers(nTeam) end
 	-- local cacheKey = 'GetTeamPlayers'..tostring(nTeam)
@@ -22,10 +21,9 @@ function GetTeamPlayers(nTeam, bypass)
 
 	local nIDs = orig_GetTeamPlayers(nTeam)
 	if nTeam == TEAM_DIRE then
-		if direTeamPlaters ~= nil then
-			return direTeamPlaters
-		end
-		
+		-- Custom games populate bots after this module is loaded. Never retain
+		-- an empty/partial Dire roster across calls; keep the human ID correction
+		-- below, but derive it from the current native player list each time.
 		local sHuman = {}
 		for idx, id in pairs(nIDs) do
 			if not IsPlayerBot(id)
@@ -63,7 +61,6 @@ function GetTeamPlayers(nTeam, bypass)
 				end
 			end
 		end
-		direTeamPlaters = nIDs
 	end
 	-- Utils.SetCachedVars(cacheKey, nIDs)
 	return nIDs

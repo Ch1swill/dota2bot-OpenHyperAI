@@ -8,7 +8,7 @@ local LanguageCode = 'en'
 local Localization = {
     en = {
         welcome_msgs = {
-            "Welcome to Open Hyper AI (OHA): ",
+            "Welcome to Open Hyper AI Ch1 (OHA.Ch1): ",
             "You can select the heroes for bots to pick, e.g. 10 same heroes or your dream teams, or change their names. Just customize bots in the Customize/general file.",
             "If you feel bots are weak, try enabling the enhanced Fretbots mode to make the game a lot more challenging. Check Workshop page for details.",
             "You can type `!pos X` to swap position with a bot. For example, type: `!pos 2` to go mid lane. Type `!3pos 5` to ask the 3rd bot on the team to play position 5.",
@@ -53,7 +53,7 @@ local Localization = {
             {"#D4AC0D", "* Bot link for any feedback: https://steamcommunity.com/sharedfiles/filedetails/?id=3246316298 . Kudos and thanks all for sharing your ideas." },
             {"#839192", "* You can use simple commands like `-info` to view difficulty info, or `-getroles`, or other interesting commands - check script's Workshop page for details." },
         },
-        newer_version = "New version of the script is available! Feel free to update the script Open Hyper AI (OHA), or check the Workshop page if you need help.",
+        newer_version = "New version of the script is available! Update Open Hyper AI Ch1 (OHA.Ch1) from the GitHub project page.",
         fret_diff_open = "Difficulty voting is now open! Default difficulty is: ",
         fret_diff_vote_hint = 'Enter a number (0 to %d) in chat to vote.',
         fret_ally_scale_open = 'Now vote for the bonus scale for ally bots in your team comparing to the other side. The default scale is: ',
@@ -134,7 +134,7 @@ local Localization = {
     },
     zh = {
         welcome_msgs = {
-            "欢迎来到 Open Hyper AI (OHA)：",
+            "欢迎来到 Open Hyper AI Ch1 (OHA.Ch1)：",
             "你可以自定义机器人要选择的英雄，例如 10 个相同的英雄或别的梦幻队伍，或者更改他们的名字。只需修改 Customize/general 文件",
             "如果你觉得机器人太弱，可以尝试启用增强的 Fretbots 模式，让游戏更加具有挑战性。详情请查看创意工坊页面",
             "你可以输入 `!pos X` 与机器人交换位置。例如，输入：`!pos 2` 来走中路。输入 `!3pos 5` 让队伍中的第3个机器人玩5号位。",
@@ -187,7 +187,7 @@ local Localization = {
             {"#D4AC0D", "* 机器人反馈链接： https://steamcommunity.com/sharedfiles/filedetails/?id=3246316298 。感谢大家分享你们的想法"},
             {"#839192", "* 你可以使用简单命令如 `-info` 查看难度信息，或使用 `-getroles` 及其他有趣的命令 - 查看脚本的创意工坊页面获取详情"}
         },
-        newer_version = "有新版本可用！欢迎更新脚本 Open Hyper AI (OHA) ，或者访问创意工坊页面获取帮助。",
+        newer_version = "有新版本可用！请从 GitHub 项目页面更新 Open Hyper AI Ch1 (OHA.Ch1)。",
         fret_diff_open = "难度投票现已开放！默认难度为：",
         fret_diff_vote_hint = "在聊天中输入一个数字（0 到 %d）进行投票。",
         fret_ally_scale_open = "现在，为你队伍中盟友机器人的奖励比例投票，相对于另一方。默认比例为：",
@@ -267,7 +267,7 @@ local Localization = {
     },
     ru = {
         welcome_msgs = {
-            "Добро пожаловать в Open Hyper AI (OHA):",
+            "Добро пожаловать в Open Hyper AI Ch1 (OHA.Ch1):",
             "Вы можете выбрать героев для ботов, например, 10 одинаковых героев или свою команду мечты, или изменить их имена. Просто измените файл Customize/general.",
             "Если вы считаете, что боты слишком слабые, попробуйте включить режим улучшенных Fretbots, чтобы игра стала более сложной. Подробности смотрите на странице Workshop.",
             "Вы можете ввести `!pos X`, чтобы поменяться позицией с ботом. Например, введите: `!pos 2`, чтобы пойти на центральную линию. Введите `!3pos 5`, чтобы попросить 3-го бота в команде играть на позиции 5.",
@@ -312,7 +312,7 @@ local Localization = {
             {"#D4AC0D", "* Ссылка для обратной связи: https://steamcommunity.com/sharedfiles/filedetails/?id=3246316298 . Спасибо всем за ваши идеи."},
             {"#839192", "* Вы можете использовать простые команды, такие как `-info` для просмотра информации о сложности, `-getroles` или другие интересные команды - подробнее на странице мастерской скрипта."}
         },
-        newer_version = "Доступна новая версия скрипта! Вы можете обновить скрипт, повторно подписавшись на Open Hyper AI (OHA), или посетить страницу Workshop, если нужна помощь.",
+        newer_version = "Доступна новая версия скрипта! Обновите Open Hyper AI Ch1 (OHA.Ch1) со страницы проекта на GitHub.",
         fret_diff_open = "Голосование за сложность открыто! Сложность по умолчанию: ",
         fret_diff_vote_hint = "Введите число (от 0 до %d) в чат для голосования.",
         fret_ally_scale_open = "Теперь проголосуйте за масштаб бонуса для союзных ботов в вашей команде по сравнению с другой стороной. Масштаб по умолчанию: ",
@@ -393,7 +393,7 @@ local Localization = {
     },
     ja = {
         welcome_msgs = {
-            "Open Hyper AI (OHA)へようこそ：",
+            "Open Hyper AI Ch1 (OHA.Ch1)へようこそ：",
             "ボットが選ぶヒーローを選択したり（例: 10人の同じヒーローや夢のチーム）、名前を変更したりできます。Customize/general ファイルを編集するだけです。",
             "もしボットが弱いと感じる場合は、強化された Fretbots モードを有効にして、より挑戦的なゲームをお楽しみください。詳細はワークショップページをご覧ください。",
             "`!pos X` を入力してボットとポジションを交換できます。例えば、`!pos 2` を入力するとミッドレーンに行きます。`!3pos 5` を入力すると、チームの3番目のボットにポジション5をプレイさせます。",
@@ -438,7 +438,7 @@ local Localization = {
             {"#D4AC0D", "* フィードバック用リンク:  https://steamcommunity.com/sharedfiles/filedetails/?id=3246316298 。アイデアを共有してくれた皆さん、感謝します。"},
             {"#839192", "* `-info` のような簡単なコマンドで難易度情報を表示したり、`-getroles` や他の興味深いコマンドを使用できます - 詳細はスクリプトのワークショップページをご覧ください。"}
         },
-        newer_version = "スクリプトの新しいバージョンが利用可能です！Open Hyper AI (OHA) を再購読してスクリプトを更新するか、ヘルプが必要な場合は Workshop ページを確認してください。",
+        newer_version = "スクリプトの新しいバージョンが利用可能です！GitHub のプロジェクトページから Open Hyper AI Ch1 (OHA.Ch1) を更新してください。",
         fret_diff_open = "難易度投票が開始されました！デフォルトの難易度は：",
         fret_diff_vote_hint = "チャットで数字（0 ～ %d）を入力して投票してください。",
         fret_ally_scale_open = "自チームの味方ボットのボーナススケールを他チームと比較して投票してください。デフォルトのスケールは：",

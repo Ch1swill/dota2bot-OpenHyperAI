@@ -162,7 +162,7 @@ function X.SkillsComplement()
     if J.CanNotUseAbility(bot) then return end
 
     BlinkRPSkewerDesire = X.ConsiderBlinkRPSkewer()
-    if BlinkRPSkewerDesire > 0
+    if BlinkRPSkewerDesire > 0 and not J.ShouldWaitForBackup(bot, BlinkLocation)
     then
         bot:Action_ClearActions(false)
 
@@ -186,7 +186,7 @@ function X.SkillsComplement()
     end
 
     BlinkSkewerDesire = X.ConsiderBlinkForSkewer()
-    if BlinkSkewerDesire > 0
+    if BlinkSkewerDesire > 0 and not J.ShouldWaitForBackup(bot, BlinkLocation)
     then
         bot:Action_ClearActions(false)
 
@@ -208,7 +208,7 @@ function X.SkillsComplement()
     end
 
     BlinkRPDesire = X.ConsiderBlinkRP()
-    if BlinkRPDesire > 0
+    if BlinkRPDesire > 0 and not J.ShouldWaitForBackup(bot, BlinkLocation)
     then
         bot:Action_ClearActions(false)
 
@@ -224,7 +224,7 @@ function X.SkillsComplement()
     end
 
     BlinkHornTossSkewerDesire = X.ConsiderBlinkForHornTossSkewer()
-    if BlinkHornTossSkewerDesire > 0
+    if BlinkHornTossSkewerDesire > 0 and not J.ShouldWaitForBackup(bot, BlinkLocation)
     then
         bot:Action_ClearActions(false)
 
