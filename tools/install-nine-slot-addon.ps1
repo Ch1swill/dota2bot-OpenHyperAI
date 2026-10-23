@@ -1,6 +1,7 @@
 param(
     [Parameter(Mandatory = $true)]
     [string]$DotaRoot,
+    [switch]$TestOnly,
     [switch]$CreateDesktopShortcut
 )
 
@@ -15,7 +16,8 @@ if (-not (Test-Path -LiteralPath $taskExecutable -PathType Leaf)) {
 }
 $taskSource = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\addons\ch1_inventory_lab'))
 $taskAddons = Join-Path $taskDotaRoot 'game\dota_addons'
-$taskTarget = Join-Path $taskAddons 'ch1_inventory_lab'
+$taskAddonName = if ($TestOnly) { 'ch1_inventory_turbo_test' } else { 'ch1_inventory_lab' }
+$taskTarget = Join-Path $taskAddons $taskAddonName
 foreach ($taskPath in @($taskAddons, $taskTarget)) {
     if ((Test-Path -LiteralPath $taskPath) -and ((Get-Item -LiteralPath $taskPath -Force).Attributes -band [IO.FileAttributes]::ReparsePoint)) {
         throw "Refusing to install through a linked directory: $taskPath"
@@ -24,7 +26,7 @@ foreach ($taskPath in @($taskAddons, $taskTarget)) {
 $taskBackup = $null
 if (Test-Path -LiteralPath $taskTarget) {
     $taskBackupRoot = Join-Path $taskDotaRoot 'game\ch1_addon_backups'
-    $taskBackup = Join-Path $taskBackupRoot ('ch1_inventory_lab_' + [DateTime]::Now.ToString('yyyyMMdd_HHmmss') + '_' + [Guid]::NewGuid().ToString('N').Substring(0, 8))
+    $taskBackup = Join-Path $taskBackupRoot ($taskAddonName + '_' + [DateTime]::Now.ToString('yyyyMMdd_HHmmss') + '_' + [Guid]::NewGuid().ToString('N').Substring(0, 8))
     [void][IO.Directory]::CreateDirectory($taskBackupRoot)
     Copy-Item -LiteralPath $taskTarget -Destination $taskBackup -Recurse
 }
@@ -37,4 +39,4 @@ foreach ($taskFile in Get-ChildItem -LiteralPath $taskSource -File -Recurse) {
         throw "Addon copy verification failed: $taskRelative"
     }
 }
-[PSCustomObject]@{ addon = $taskTarget; backup = $taskBackup } | ConvertTo-Json -Compress
+[PSCustomObject]@{ addon = $taskTarget; backup = $taskBackup; command = "dota_launch_custom_game $taskAddonName dota" } | ConvertTo-Json -Compress

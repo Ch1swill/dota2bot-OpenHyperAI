@@ -4,6 +4,8 @@ local M={}
 function M.ConfigureHero(hero, playerID)
     hero:SetControllableByAllPlayers(false)
     -- The second argument skips position adjustment; it is not an allow/deny flag.
+    -- Adding the bot owner alone leaves any previous human controller bits intact.
+    hero:SetControllableByPlayer(-1, true)
     hero:SetControllableByPlayer(playerID, true)
 end
 

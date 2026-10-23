@@ -26,6 +26,23 @@ EntIndexToHScript=function(index) return entities[index] end
 local function allow(issuer,units,orderType)
     return control.AllowOrder({issuer_player_id_const=issuer,units=units,order_type=orderType})
 end
+test('initializing a bot removes inherited human controllers and keeps its own AI',function()
+    for _,owner in ipairs({1,5,9}) do
+        local controllers={[0]=true,[10]=true,[owner]=true}
+        local hero={
+            SetControllableByAllPlayers=function(_,enabled) assert(enabled==false) end,
+            SetControllableByPlayer=function(_,id,skipAdjust)
+                assert(skipAdjust==true)
+                if id==-1 then controllers={} else controllers[id]=true end
+            end,
+        }
+        control.ConfigureHero(hero,owner)
+        assert(controllers[owner] and not controllers[0] and not controllers[10])
+        local count=0
+        for _ in pairs(controllers) do count=count+1 end
+        assert(count==1,'A different player still controls the bot')
+    end
+end)
 test('human cannot move or cast with allied or enemy bot units',function()
     for _,orderType in ipairs({1,4,5,6,8,9,10}) do
         for _,index in ipairs({101,105,109}) do

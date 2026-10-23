@@ -7,6 +7,7 @@ function Precache(context)
 end
 
 function Activate()
+    local mode=require('ch1_inventory.turbo_rules').EnsureMode()
     print('[Ch1InventoryLab] addon activated')
     GameRules.Ch1InventoryLabActive=true
     -- BotPopulate is a no-op without cheat mode, even in a local custom game.
@@ -24,7 +25,6 @@ function Activate()
     GameRules:SetStrategyTime(0)
     GameRules:SetShowcaseTime(0)
     GameRules:SetPreGameTime(90)
-    local mode=GameRules:GetGameModeEntity()
     -- Custom games otherwise use legacy rune spawns and no personal couriers.
     -- Opt into the installed game's current rules before any heroes spawn.
     mode:SetUseDefaultDOTARuneSpawnLogic(true)

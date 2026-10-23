@@ -39,6 +39,27 @@ casting and mixed selections. AI/server orders, a human's own units, real-human
 sharing and addon cleanup remain allowed. These policy checks simulate the API;
 a real client must separately verify that selecting either team's bot cannot
 command it, while the human's own courier and ALT pings still work.
+They additionally model inherited human controller bits: initialization must clear
+the existing list before adding the bot owner. Native Turbo registration must
+precede filters/thinkers, reuse an existing Turbo entity on reload, and stop setup
+if the engine fails to register that entity. The 24 addon/control cases simulate
+these APIs; client selection and right-click follow still require a real player.
+
+`tests/ch1_addon_install_regression.ps1` checks independent `-TestOnly` deployment,
+source hashes, preservation of an existing production addon and personal settings,
+repeat-deployment backup, and rejection of automatic launch.
+
+On 2026-10-23 a dedicated server loaded the revised entry point in two consecutive
+custom matches. Both registered `dota_turbo_game_mode`, retained ten bot owners,
+and passed three engine-dispatched orders with a substituted human issuer (all
+rejected). The first match recorded hero damage of 950/1963 and last hits of 9/10
+for Radiant/Dire. No Lua runtime errors were logged in either match. Courier
+speed 1100, mid T1 health/armor 1800/12, and doubled fixed creep gold matched a
+separate native mode-23 baseline. The XP fixture returned zero in both modes and
+does not establish an XP multiplier. These headless checks do not validate client
+Lua modifier initialization or the reported selection/follow interface; the
+clean candidate is installed separately as `ch1_inventory_turbo_test` for that
+player test. Production `ch1_inventory_lab` and ordinary bot files are unchanged.
 
 The nine-slot human inventory experiment was reverted on 2026-10-18 after a
 real player's game crashed on entry. The user's dump and the earlier full-roster
@@ -81,7 +102,7 @@ eligibility module with a simulated server API. It covers passive enemy bots wit
 unfair allied bots, a human on either team, delayed heroes/slots, hero replacement,
 single initialization per hero, invalid/illusion/spectator exclusions, human-only
 inventory effects, cheat-gated roster filling, match-end cleanup, current official
-rune rules and free personal couriers before roster filling (nine scenarios).
+rune rules and free personal couriers before roster filling.
 The entry point sets both teams' real bot heroes to engine difficulty 4 (unfair), matching
 the native hero API used by Valve's installed `tutorial_assist_game` example.
 This is independent of FretBots' bonus scale. The suite verifies initialization,

@@ -50,16 +50,31 @@ local function world(humanTeam)
         env.GameRules[method] = function() end
     end
     w.mode = {
+        GetClassname = function() return w.modeClass or 'dota_base_game_mode' end,
         SetUseDefaultDOTARuneSpawnLogic = function(_, enabled) w.currentRuneRules = enabled end,
         SetFreeCourierModeEnabled = function(_, enabled) w.personalCouriers = enabled end,
         SetBotThinkingEnabled = function(_, enabled) w.thinking = enabled end,
         SetDraftingHeroPickSelectTimeOverride = function() end,
-        SetExecuteOrderFilter = function(_, callback, context)
+        SetExecuteOrderFilter = function(self, callback, context)
+            assert(self==w.mode,'Order filter attached to the replaced base mode')
             w.orderFilter=function(order) return callback(context,order) end
         end,
-        SetContextThink = function(_, _, callback) w.tick = callback end,
+        SetContextThink = function(self, _, callback)
+            assert(self==w.mode,'Thinker attached to the replaced base mode')
+            w.tick = callback
+        end,
     }
     env.GameRules.GetGameModeEntity = function() return w.mode end
+    env.SpawnEntityFromTableSynchronous = function(classname)
+        assert(classname=='dota_turbo_game_mode')
+        assert(w.tick==nil and w.orderFilter==nil,'Callbacks installed on the replaced mode')
+        w.turboSpawns=(w.turboSpawns or 0)+1
+        w.modeClass=classname
+        local replacement={}
+        for name,method in pairs(w.mode) do replacement[name]=method end
+        w.mode=replacement
+        return w.mode
+    end
     env.PlayerResource = {
         IsValidPlayerID = function(_, id) return w.slots[id] ~= nil end,
         IsFakeClient = function(_, id) return w.slots[id].fake end,
@@ -71,6 +86,9 @@ local function world(humanTeam)
         if name == 'ch1_inventory.human_backpack' then return backpack end
         if name == 'ch1_inventory.bot_control' then
             return loadIn(sourceRoot .. '/scripts/vscripts/ch1_inventory/bot_control.lua', env)
+        end
+        if name == 'ch1_inventory.turbo_rules' then
+            return loadIn(sourceRoot .. '/scripts/vscripts/ch1_inventory/turbo_rules.lua', env)
         end
         error('Unexpected dependency: ' .. name)
     end
@@ -111,6 +129,22 @@ local function world(humanTeam)
     end
     return w
 end
+
+test('native Turbo is initialized before filters and thinkers and reused on reload', function()
+    local w=world(2)
+    w:boot()
+    assert(w.modeClass=='dota_turbo_game_mode' and w.turboSpawns==1)
+    w.env.Activate()
+    assert(w.turboSpawns==1,'Reload replaced a configured Turbo entity')
+    assert(w.thinking and type(w.orderFilter)=='function' and type(w.tick)=='function')
+end)
+
+test('a failed native Turbo registration stops setup before bot or inventory changes', function()
+    local w=world(2)
+    w.env.SpawnEntityFromTableSynchronous=function() return {} end
+    local ok=pcall(function() w:boot() end)
+    assert(not ok and w.tick==nil and w.orderFilter==nil and #w.commands==0)
+end)
 
 test('current official rune rules and personal couriers are enabled before bot filling', function()
     local w = world(2)
